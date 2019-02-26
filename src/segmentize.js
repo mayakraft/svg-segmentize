@@ -55,9 +55,11 @@ const svg_polyline_to_segments = function(polyline) {
 	return circularPath;
 }
 const svg_path_to_segments = function(path) {
-	let segmentLength = path.getTotalLength() / (RES_PATH-1);
 	let d = path.getAttribute("d");
 	let isClosed = (d[d.length-1] === "Z" || d[d.length-1] === "z");
+	let segmentLength = (isClosed
+		? path.getTotalLength() / RES_PATH
+		: path.getTotalLength() / (RES_PATH-1));
 	let pathsPoints = Array.from(Array(RES_PATH))
 		.map((_,i) => path.getPointAtLength(i*segmentLength))
 		.map(p => [p.x, p.y]);

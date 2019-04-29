@@ -6,7 +6,7 @@ const parseable = Object.keys(segmentize);
 const svgNS = "http://www.w3.org/2000/svg";
 
 // valid attributes for the <svg> object
-const svgAttributes = ["class", "style", "externalResourcesRequired", "x", "y", "width", "height", "viewBox", "preserveAspectRatio", "zoomAndPan", "version", "baseProfile", "contentScriptType", "contentStyleType"];
+const svgAttributes = ["version", "xmlns", "contentScriptType", "contentStyleType", "baseProfile", "class", "externalResourcesRequired", "x", "y", "width", "height", "viewBox", "preserveAspectRatio", "zoomAndPan", "style"];
 
 // attributes that specify the geometry of each shape type
 const shape_attr = {
@@ -34,12 +34,16 @@ const attribute_list = function(element) {
 		.filter(a => shape_attr[element.tagName].indexOf(a.name) === -1);
 }
 
-export const svg = function(svg) {
+const svg = function(svg) {
 	let newSVG = document.createElementNS(svgNS, "svg");
 	// copy over attributes
 	svgAttributes.map(a => ({attribute: a, value: svg.getAttribute(a)}))
 		.filter(obj => obj.value != null)
 		.forEach(obj => newSVG.setAttribute(obj.attribute, obj.value));
+	// xmlns is required. make sure it's present
+	if (newSVG.getAttribute("xmlns") === null) {
+		newSVG.setAttribute("xmlns", svgNS);
+	}
 	let elements = flatten_tree(svg);
 	// copy over <style> elements
 	let styles = elements.filter(e => e.tagName === "style" || e.tagName === "defs");
@@ -67,9 +71,27 @@ export const svg = function(svg) {
 	return newSVG;
 }
 
-export const segments = function(svg) {
+const withAttributes = function(svg) {
+	// convert geometry to segments, preserving class
+	return flatten_tree(svg)
+		.filter(e => parseable.indexOf(e.tagName) !== -1)
+		.map(e => segmentize[e.tagName](e).map(s => {
+			let obj = ({x1:s[0], y1:s[1], x2:s[2], y2:s[3]});
+			attribute_list(e).forEach(a => obj[a.nodeName] = a.value);
+			return obj;
+		}))
+		.reduce((a,b) => a.concat(b), []);
+}
+
+const segments = function(svg) {
 	return flatten_tree(svg)
 		.filter(e => parseable.indexOf(e.tagName) !== -1)
 		.map(e => segmentize[e.tagName](e))
 		.reduce((a,b) => a.concat(b), []);
 }
+
+export {
+	svg,
+	withAttributes,
+	segments,
+};

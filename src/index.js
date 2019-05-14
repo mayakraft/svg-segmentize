@@ -1,12 +1,42 @@
 // svg segmentize (c) Robby Kraft
 
-import segmentize from "./segmentize";
-const parseable = Object.keys(segmentize);
+let DOMParser = (typeof window === "undefined" || window === null)
+	? undefined
+	: window.DOMParser;
+if (typeof DOMParser === "undefined" || DOMParser === null) {
+	DOMParser = require("xmldom").DOMParser;
+}
+let document = (typeof window === "undefined" || window === null)
+	? undefined
+	: window.document;
+if (typeof document === "undefined" || document === null) {
+	document = new DOMParser()
+		.parseFromString("<!DOCTYPE html><title>a</title>", "text/html")
+}
 
+import segmentize from "./segmentize";
+
+const parseable = Object.keys(segmentize);
 const svgNS = "http://www.w3.org/2000/svg";
 
 // valid attributes for the <svg> object
-const svgAttributes = ["version", "xmlns", "contentScriptType", "contentStyleType", "baseProfile", "class", "externalResourcesRequired", "x", "y", "width", "height", "viewBox", "preserveAspectRatio", "zoomAndPan", "style"];
+const svgAttributes = [
+	"version",
+	"xmlns",
+	"contentScriptType",
+	"contentStyleType",
+	"baseProfile",
+	"class",
+	"externalResourcesRequired",
+	"x",
+	"y",
+	"width",
+	"height",
+	"viewBox",
+	"preserveAspectRatio",
+	"zoomAndPan",
+	"style"
+];
 
 // attributes that specify the geometry of each shape type
 const shape_attr = {
@@ -22,7 +52,8 @@ const shape_attr = {
 const flatten_tree = function(element) {
 	// the container objects in SVG: group, the svg itself
 	if (element.tagName === "g" || element.tagName === "svg") {
-		return Array.from(element.children)
+		if (element.childNodes == null) { return []; }
+		return Array.from(element.childNodes)
 			.map(child => flatten_tree(child))
 			.reduce((a,b) => a.concat(b),[]);
 	}
@@ -46,7 +77,8 @@ const svg = function(svg) {
 	}
 	let elements = flatten_tree(svg);
 	// copy over <style> elements
-	let styles = elements.filter(e => e.tagName === "style" || e.tagName === "defs");
+	let styles = elements
+		.filter(e => e.tagName === "style" || e.tagName === "defs");
 	if (styles.length > 0) {
 		styles.map(style => style.cloneNode(true))
 			.forEach(style => newSVG.appendChild(style));
@@ -54,8 +86,9 @@ const svg = function(svg) {
 	// convert geometry to segments, preserving class
 	let segments = elements
 		.filter(e => parseable.indexOf(e.tagName) !== -1)
-		.map(e => segmentize[e.tagName](e).map(unit => [...unit, attribute_list(e)]))
-		.reduce((a,b) => a.concat(b), []);
+		.map(e => segmentize[e.tagName](e)
+			.map(unit => [...unit, attribute_list(e)])
+		).reduce((a,b) => a.concat(b), []);
 	// write segments into the svg
 	segments.forEach(s => {
 		let line = document.createElementNS(svgNS, "line");

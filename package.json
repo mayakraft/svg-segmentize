@@ -1,0 +1,14 @@
+{
+	"name": "svg-segmentize",
+	"version": "1.0",
+	"description": "convert an svg image into a version containing only (straight) line segments. output can be in the form of another svg image or a data-only array (arrays of endpoints).",
+	"main": "src/index.js",
+	"scripts": {
+		"test": "node test/tests.js"
+	},
+	"author": "Robby Kraft",
+	"license": "MIT",
+	"dependencies": {
+		"xmldom": "^0.1.27"
+	}
+}

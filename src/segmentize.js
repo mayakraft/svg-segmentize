@@ -1,18 +1,18 @@
-import {
-	default as PathProperties
-} from "../include/svg-path-properties/path-properties";
-
 /*
  * convert an SVG into line segments. include all SVG primitives
  * all line segments are encoded as 1 array of 4 numbers:
  *  [ x1, y1, x2, y2 ]
  */
 
+import {
+	default as PathProperties
+} from "../include/svg-path-properties/path-properties";
+
 const RES_CIRCLE = 64;
 const RES_PATH = 128;
 
 // SVG will occasionally remove x1="0", attribute absense is an implied 0.
-let empty = { baseVal: { value: 0 } };
+const emptyValue = { value: 0 };
 
 const getAttributes = function(element, attributeList) {
 	let indices = attributeList.map(attr => {
@@ -23,7 +23,7 @@ const getAttributes = function(element, attributeList) {
 		}
 	});
 	return indices
-		.map(i => i === undefined ? empty : element.attributes[i])
+		.map(i => i === undefined ? emptyValue : element.attributes[i])
 		.map(attr => attr.value !== undefined ? attr.value : attr.baseVal.value);
 }
 

@@ -1,10 +1,6 @@
-
 const Segmentize = require('../svg-segmentize');
-const XMLDOM = require("xmldom");
-const DOMParser = XMLDOM.DOMParser;
-const XMLSerializer = XMLDOM.XMLSerializer;
 
-let svgString = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="75 75 350 350" width="45vmax" height="45vmax">
+let allPrimitives = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="75 75 350 350" width="45vmax" height="45vmax">
 		<style type="text/css">
 			.pen { stroke: black; }
 			.alpha-fill { fill: rgba(0,0,0,0.2); }
@@ -36,12 +32,28 @@ let svgString = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="
 	</svg>`;
 
 
-let svg = new DOMParser().parseFromString(svgString, "text/xml").documentElement;
+let a_svg = Segmentize.svg(allPrimitives);
+let a_segments = Segmentize.segments(allPrimitives);
+let a_withAttrs = Segmentize.withAttributes(allPrimitives);
 
-let segmentizedSVG = Segmentize.svg(svg);
+console.log(a_segments.length === a_withAttrs.length 
+	? "test passes" : "test fail. array lengths should match", 
+	a_segments.length, a_withAttrs.length);
 
-let outputString = new XMLSerializer().serializeToString(segmentizedSVG);
-console.log(outputString);
+let small = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+	<!-- comment -->
+	<rect fill="none" x="10" y="10" width="80" height="80"/>
+	<line stroke="black" x1="0" y1="0" x2="100" y2="100"/>
+</svg>`;
 
+let b_svg = Segmentize.svg(small);
+let b_segments = Segmentize.segments(small);
+let b_withAttrs = Segmentize.withAttributes(small);
 
-// let segments = Segmentize.segments(svg);
+console.log("-------\n#1 svg\n", b_svg);
+console.log("-------\n#2 segments\n", b_segments);
+console.log("-------\n#3 withAttributes\n", b_withAttrs);
+
+console.log(b_segments.length === b_withAttrs.length && b_segments.length === 5
+	? "test passes" : "test fail. array lengths should match", 
+	b_segments.length, b_withAttrs.length);

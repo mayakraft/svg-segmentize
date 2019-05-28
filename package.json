@@ -2,7 +2,7 @@
 	"name": "svg-segmentize",
 	"version": "0.1.0",
 	"description": "convert an svg image into a version containing only (straight) line segments. output can be in the form of another svg image or a data-only array (arrays of endpoints).",
-	"main": "src/index.js",
+	"main": "svg-segmentize.js",
 	"scripts": {
 		"test": "node test/tests.js"
 	},
@@ -10,5 +10,12 @@
 	"license": "MIT",
 	"dependencies": {
 		"xmldom": "^0.1.27"
+	},
+	"devDependencies": {
+		"eslint": "^5.16.0",
+		"eslint-config-airbnb-base": "^13.1.0",
+		"eslint-plugin-import": "^2.17.3",
+		"rollup-plugin-babel-minify": "^8.0.0",
+		"rollup-plugin-cleanup": "^3.1.1"
 	}
 }

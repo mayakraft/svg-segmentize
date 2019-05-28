@@ -34,8 +34,8 @@
 </body>
 <script type="text/javascript" src="../svg-segmentize.js"></script>
 <script>
-let svgString = Segmentize.svg(document.querySelectorAll("svg")[0]);
-let svg = (new DOMParser())
-	.parseFromString(svgString, "text/xml").documentElement;
+const svgString = Segmentize.svg(document.querySelectorAll("svg")[0]);
+const svg = (new DOMParser())
+  .parseFromString(svgString, "text/xml").documentElement;
 document.body.appendChild(svg);
 </script>

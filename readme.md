@@ -1,5 +1,7 @@
 # SVG segmentize
 
+[![Build Status](https://travis-ci.org/robbykraft/svg-segmentize.svg?branch=master)](https://travis-ci.org/robbykraft/svg-segmentize)
+
 this processes an .svg into a copy containing only (straight) line segments. it can handle every shape in the SVG 1.1 specification:
 
 - line
@@ -59,9 +61,7 @@ Segmentize.segments(svgElement);
 Segmentize.withAttributes(svgElement);
 ```
 
-**output segments**: an array of arrays of numbers, where each segment is encoded: [x1, y1, x2, y2]
-
-**output withAttributes**: an array of objects, each attribute, including x1, y1, x2, y2 are keys, with their associated values.
+**output segments**: an array of arrays of numbers, where each segment is encoded. `[x1, y1, x2, y2]`
 
 ```javascript
 [
@@ -71,6 +71,8 @@ Segmentize.withAttributes(svgElement);
   ...
 ]
 ```
+
+**output withAttributes**: an array of objects, each attribute including x1, y1, x2, y2 are keys with their associated values.
 
 ```javascript
 [

@@ -95,6 +95,10 @@ Segmentize.withAttributes(svgElement);
 ]
 ```
 
+# todo
+
+options parameter, which includes the resolution of curves.
+
 # license
 
 MIT

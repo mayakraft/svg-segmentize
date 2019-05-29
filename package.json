@@ -1,21 +1,34 @@
 {
-	"name": "svg-segmentize",
-	"version": "0.1.0",
-	"description": "convert an svg image into a version containing only (straight) line segments. output can be in the form of another svg image or a data-only array (arrays of endpoints).",
-	"main": "svg-segmentize.js",
-	"scripts": {
-		"test": "node test/tests.js"
-	},
-	"author": "Robby Kraft",
-	"license": "MIT",
-	"dependencies": {
-		"xmldom": "^0.1.27"
-	},
-	"devDependencies": {
-		"eslint": "^5.16.0",
-		"eslint-config-airbnb-base": "^13.1.0",
-		"eslint-plugin-import": "^2.17.3",
-		"rollup-plugin-babel-minify": "^8.0.0",
-		"rollup-plugin-cleanup": "^3.1.1"
-	}
+  "name": "svg-segmentize",
+  "version": "0.1.1",
+  "description": "convert an svg image into a version containing only (straight) line segments. output can be in the form of another svg image or a data-only array (arrays of endpoints).",
+  "main": "svg-segmentize.js",
+  "scripts": {
+    "test": "node test/tests.js"
+  },
+  "keywords": [
+    "svg",
+    "line",
+    "segment",
+    "path",
+    "simplify",
+    "divide",
+    "convert",
+    "fragment",
+    "vector"
+  ],
+  "author": "Robby Kraft",
+  "license": "MIT",
+  "repository": "https://github.com/robbykraft/svg-segmentize",
+  "dependencies": {
+    "xmldom": "^0.1.27"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.17.3",
+    "rollup": "^1.12.4",
+    "rollup-plugin-babel-minify": "^8.0.0",
+    "rollup-plugin-cleanup": "^3.1.1"
+  }
 }

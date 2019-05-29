@@ -1,4 +1,4 @@
-import minify from 'rollup-plugin-babel-minify';
+import minify from "rollup-plugin-babel-minify";
 import cleanup from "rollup-plugin-cleanup";
 
 module.exports = {
@@ -15,9 +15,6 @@ module.exports = {
       comments: "none",
       maxEmptyLines: 0,
     }),
-    minify({
-      bannerNewLine: true,
-      comments: false,
-    }),
+    minify(),
   ],
 };

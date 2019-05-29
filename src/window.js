@@ -1,26 +1,25 @@
 // get DOMParser and XMLSerializer from the browser or from Node
 
-let DOMParser = (typeof window === "undefined" || window === null)
-  ? undefined
-  : window.DOMParser;
-if (typeof DOMParser === "undefined" || DOMParser === null) {
-  DOMParser = require("xmldom").DOMParser;
+import {
+  isBrowser,
+  isNode,
+} from "./detect";
+
+const htmlString = "<!DOCTYPE html><title>a</title>";
+const out = {};
+
+if (isNode()) {
+  const { DOMParser, XMLSerializer } = require("xmldom");
+  out.DOMParser = DOMParser;
+  out.XMLSerializer = XMLSerializer;
+  out.document = new DOMParser().parseFromString(htmlString, "text/html");
+} else if (isBrowser()) {
+  out.DOMParser = window.DOMParser;
+  out.XMLSerializer = window.XMLSerializer;
+  out.document = window.document;
 }
 
-let XMLSerializer = (typeof window === "undefined" || window === null)
-  ? undefined
-  : window.XMLSerializer;
-if (typeof XMLSerializer === "undefined" || XMLSerializer === null) {
-  XMLSerializer = require("xmldom").XMLSerializer;
-}
-
-let document = (typeof window === "undefined" || window === null)
-  ? undefined
-  : window.document;
-if (typeof document === "undefined" || document === null) {
-  document = new DOMParser()
-    .parseFromString("<!DOCTYPE html><title>a</title>", "text/html");
-}
+const { DOMParser, XMLSerializer, document } = out;
 
 export {
   DOMParser,

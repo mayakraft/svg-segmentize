@@ -7,7 +7,7 @@ module.exports = {
     name: "Segmentize",
     file: "svg-segmentize.js",
     format: "umd",
-    // format: 'es',
+    // format: "es",
     banner: "/* (c) Robby Kraft, MIT License\n * makes use of these libraries:\n * - SVG Path Properties by Roger Veciana i Rovira\n * - vkBeautify by Vadim Kiryukhin\n */",
   },
   plugins: [

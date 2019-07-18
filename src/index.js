@@ -4,14 +4,9 @@
 // RES_CIRCLE, RES_PATH
 
 import segmentize from "./segmentize";
-
 import vkXML from "../include/vkbeautify-xml";
-
-import {
-  DOMParser,
-  XMLSerializer,
-  document,
-} from "./window";
+import window from "./window";
+import { transformIntoMatrix } from "./transforms";
 
 const parseable = Object.keys(segmentize);
 const svgNS = "http://www.w3.org/2000/svg";
@@ -49,7 +44,7 @@ const shape_attr = {
 const inputIntoXML = function (input) {
   // todo, how do you test for DOM level 2 core Element type in nodejs?
   return (typeof input === "string" || input instanceof String
-    ? (new DOMParser()).parseFromString(input, "text/xml").documentElement
+    ? (new window.DOMParser()).parseFromString(input, "text/xml").documentElement
     : input);
 };
 
@@ -71,7 +66,7 @@ const attribute_list = function (element) {
 
 const svg = function (input) {
   const inputSVG = inputIntoXML(input);
-  const newSVG = document.createElementNS(svgNS, "svg");
+  const newSVG = window.document.createElementNS(svgNS, "svg");
   // copy over attributes
   svgAttributes.map(a => ({ attribute: a, value: inputSVG.getAttribute(a) }))
     .filter(obj => obj.value != null && obj.value !== "")
@@ -96,7 +91,7 @@ const svg = function (input) {
     .reduce((a, b) => a.concat(b), []);
   // write segments into the svg
   segments.forEach((s) => {
-    const line = document.createElementNS(svgNS, "line");
+    const line = window.document.createElementNS(svgNS, "line");
     line.setAttributeNS(null, "x1", s[0]);
     line.setAttributeNS(null, "y1", s[1]);
     line.setAttributeNS(null, "x2", s[2]);
@@ -107,7 +102,7 @@ const svg = function (input) {
     newSVG.appendChild(line);
   });
 
-  const stringified = new XMLSerializer().serializeToString(newSVG);
+  const stringified = new window.XMLSerializer().serializeToString(newSVG);
   const beautified = vkXML(stringified);
   return beautified;
 };
@@ -140,4 +135,7 @@ export {
   svg,
   withAttributes,
   segments,
+  transformIntoMatrix,
 };
+
+// export default main;

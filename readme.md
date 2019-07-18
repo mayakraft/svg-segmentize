@@ -99,6 +99,10 @@ Segmentize.withAttributes(svgElement);
 
 options parameter, which includes the resolution of curves.
 
+# notes
+
+the [getPointAtLength](https://developer.mozilla.org/en-US/docs/Web/API/SVGGeometryElement/getPointAtLength) method is implemented in all browsers but doesn't exist in node, hence, the svg-path-properties library. If you don't need to convert `<path>` items, this can be removed, cutting the library file size in half.
+
 # license
 
 MIT

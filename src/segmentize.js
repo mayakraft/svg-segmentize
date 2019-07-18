@@ -12,6 +12,17 @@ const RES_PATH = 128;
 // SVG will occasionally remove x1="0", attribute absense is an implied 0.
 const emptyValue = { value: 0 };
 
+/**
+ * in SVG a list of points is a SPACE-separated string, where each point is
+ * COMMA-separated. example: 0.5,0.5 2,3 10,1
+ */
+const pointStringToArray = function (str) {
+  return str.split(" ")
+    .filter(s => s !== "")
+    .map(p => p.split(",")
+      .map(n => parseFloat(n)));
+};
+
 const getAttributes = function (element, attributeList) {
   const indices = attributeList.map((attr) => {
     for (let i = 0; i < element.attributes.length; i += 1) {
@@ -19,7 +30,7 @@ const getAttributes = function (element, attributeList) {
         return i;
       }
     }
-    return -1;
+    return undefined;
   });
   return indices
     .map(i => (i === undefined ? emptyValue : element.attributes[i]))
@@ -74,13 +85,6 @@ const svg_ellipse_to_segments = function (ellipse) {
       arr[(i + 1) % arr.length][0],
       arr[(i + 1) % arr.length][1],
     ]);
-};
-
-const pointStringToArray = function (str) {
-  return str.split(" ")
-    .filter(s => s !== "")
-    .map(p => p.split(",")
-      .map(n => parseFloat(n)));
 };
 const svg_polygon_to_segments = function (polygon) {
   let points = "";

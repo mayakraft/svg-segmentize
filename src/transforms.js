@@ -4,16 +4,36 @@
  *
  */
 
-import { parse_transform } from "./parsers";
+import { parseTransform } from "./parsers";
+
+// const multiply_vector2_matrix2 = function (vector, matrix) {
+//   return [
+//     vector[0] * matrix[0] + vector[1] * matrix[2] + matrix[4],
+//     vector[0] * matrix[1] + vector[1] * matrix[3] + matrix[5],
+//   ];
+// };
+/**
+ * line is an array of 4 numbers: [x1, y1, x2, y2]
+ *
+ */
+const multiply_line_matrix2 = function (line, matrix) {
+  return [
+    line[0] * matrix[0] + line[1] * matrix[2] + matrix[4],
+    line[0] * matrix[1] + line[1] * matrix[3] + matrix[5],
+    line[2] * matrix[0] + line[3] * matrix[2] + matrix[4],
+    line[2] * matrix[1] + line[3] * matrix[3] + matrix[5],
+  ];
+};
 
 const multiply_matrices2 = function (m1, m2) {
-  const a = m1[0] * m2[0] + m1[2] * m2[1];
-  const c = m1[0] * m2[2] + m1[2] * m2[3];
-  const tx = m1[0] * m2[4] + m1[2] * m2[5] + m1[4];
-  const b = m1[1] * m2[0] + m1[3] * m2[1];
-  const d = m1[1] * m2[2] + m1[3] * m2[3];
-  const ty = m1[1] * m2[4] + m1[3] * m2[5] + m1[5];
-  return [a, b, c, d, tx, ty];
+  return [
+    m1[0] * m2[0] + m1[2] * m2[1],
+    m1[1] * m2[0] + m1[3] * m2[1],
+    m1[0] * m2[2] + m1[2] * m2[3],
+    m1[1] * m2[2] + m1[3] * m2[3],
+    m1[0] * m2[4] + m1[2] * m2[5] + m1[4],
+    m1[1] * m2[4] + m1[3] * m2[5] + m1[5],
+  ];
 };
 
 const matrixFormTranslate = function (params) {
@@ -46,9 +66,11 @@ const matrixFormScale = function (params) {
   }
   return undefined;
 };
+
 const matrixFormSkewX = function (params) {
   return [1, 0, Math.tan(params[0] / 180 * Math.PI), 1, 0, 0];
 };
+
 const matrixFormSkewY = function (params) {
   return [1, Math.tan(params[0] / 180 * Math.PI), 0, 1, 0, 0];
 };
@@ -67,13 +89,37 @@ const matrixForm = function (transformType, params) {
 };
 
 const transformIntoMatrix = function (string) {
-  return parse_transform(string)
+  return parseTransform(string)
     .map(el => matrixForm(el.transform, el.parameters))
     .filter(a => a !== undefined)
     .reduce((a, b) => multiply_matrices2(a, b), [1, 0, 0, 1, 0, 0]);
 };
 
+const getElementsTransform = function (element) {
+  if (typeof element.getAttribute !== "function") {
+    return [1, 0, 0, 1, 0, 0];
+  }
+  const transformAttr = element.getAttribute("transform");
+  if (transformAttr != null && transformAttr !== "") {
+    return transformIntoMatrix(transformAttr);
+  }
+  return [1, 0, 0, 1, 0, 0];
+};
+
+const apply_nested_transforms = function (element, stack = [1, 0, 0, 1, 0, 0]) {
+  const local = multiply_matrices2(stack, getElementsTransform(element));
+  element.matrix = local;
+  // the container objects in SVG: group, the svg itself
+  if (element.tagName === "g" || element.tagName === "svg") {
+    if (element.childNodes == null) { return; }
+    Array.from(element.childNodes)
+      .forEach(child => apply_nested_transforms(child, local));
+  }
+};
+
 export {
+  multiply_line_matrix2,
   matrixForm,
   transformIntoMatrix,
+  apply_nested_transforms,
 };

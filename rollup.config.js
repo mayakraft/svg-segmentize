@@ -15,6 +15,6 @@ module.exports = {
       comments: "none",
       maxEmptyLines: 0,
     }),
-    minify(),
+    // minify(),
   ],
 };

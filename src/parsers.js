@@ -3,7 +3,7 @@
  * @param {string} transform, like "translate(20 30) rotate(30) skewY(10)"
  * @returns {object[]} array of objects, {transform:__, parameters:__}
  */
-export const parse_transform = function (transform) {
+export const parseTransform = function (transform) {
   const parsed = transform.match(/(\w+\((\-?\d+\.?\d*e?\-?\d*,?\s*)+\))+/g);
   const listForm = parsed.map(a => a.match(/[\w\.\-]+/g));
   return listForm.map(a => ({

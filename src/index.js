@@ -3,12 +3,12 @@
 // todo: introduce options {} as a second parameter, make available:
 // RES_CIRCLE, RES_PATH
 
-import segmentize from "./segmentize";
+import primitives from "./primitives";
 import vkXML from "../include/vkbeautify-xml";
 import window from "./window";
-import { transformIntoMatrix } from "./transforms";
+import { apply_nested_transforms, multiply_line_matrix2 } from "./transforms";
 
-const parseable = Object.keys(segmentize);
+const parseable = Object.keys(primitives);
 const svgNS = "http://www.w3.org/2000/svg";
 
 // valid attributes for the <svg> object
@@ -41,7 +41,7 @@ const shape_attr = {
   path: ["d"],
 };
 
-const inputIntoXML = function (input) {
+const stringToDomTree = function (input) {
   // todo, how do you test for DOM level 2 core Element type in nodejs?
   return (typeof input === "string" || input instanceof String
     ? (new window.DOMParser()).parseFromString(input, "text/xml").documentElement
@@ -65,7 +65,7 @@ const attribute_list = function (element) {
 };
 
 const svg = function (input) {
-  const inputSVG = inputIntoXML(input);
+  const inputSVG = stringToDomTree(input);
   const newSVG = window.document.createElementNS(svgNS, "svg");
   // copy over attributes
   svgAttributes.map(a => ({ attribute: a, value: inputSVG.getAttribute(a) }))
@@ -86,7 +86,7 @@ const svg = function (input) {
   // convert geometry to segments, preserving class
   const segments = elements
     .filter(e => parseable.indexOf(e.tagName) !== -1)
-    .map(e => segmentize[e.tagName](e)
+    .map(e => primitives[e.tagName](e)
       .map(unit => [...unit, attribute_list(e)]))
     .reduce((a, b) => a.concat(b), []);
   // write segments into the svg
@@ -107,12 +107,20 @@ const svg = function (input) {
   return beautified;
 };
 
+const segments = function (input) {
+  const inputSVG = stringToDomTree(input);
+  return flatten_tree(inputSVG)
+    .filter(e => parseable.indexOf(e.tagName) !== -1)
+    .map(e => primitives[e.tagName](e))
+    .reduce((a, b) => a.concat(b), []);
+};
+
 const withAttributes = function (input) {
-  const inputSVG = inputIntoXML(input);
+  const inputSVG = stringToDomTree(input);
   // convert geometry to segments, preserving class
   return flatten_tree(inputSVG)
     .filter(e => parseable.indexOf(e.tagName) !== -1)
-    .map(e => segmentize[e.tagName](e).map((s) => {
+    .map(e => primitives[e.tagName](e).map((s) => {
       const obj = {};
       [obj.x1, obj.y1, obj.x2, obj.y2] = s;
       attribute_list(e).forEach((a) => {
@@ -123,19 +131,67 @@ const withAttributes = function (input) {
     .reduce((a, b) => a.concat(b), []);
 };
 
-const segments = function (input) {
-  const inputSVG = inputIntoXML(input);
-  return flatten_tree(inputSVG)
-    .filter(e => parseable.indexOf(e.tagName) !== -1)
-    .map(e => segmentize[e.tagName](e))
-    .reduce((a, b) => a.concat(b), []);
+const DEFAULTS = {
+  style: true,
+  flatten: true,
+  svg: false,
 };
 
-export {
-  svg,
-  withAttributes,
-  segments,
-  transformIntoMatrix,
+const Segmentize = function (input, options) {
+  const inputSVG = stringToDomTree(input);
+  apply_nested_transforms(inputSVG);
+  const elements = flatten_tree(inputSVG);
+  // convert geometry to segments, preserving class
+  const lineSegments = elements
+    .filter(e => parseable.indexOf(e.tagName) !== -1)
+    .map(e => primitives[e.tagName](e)
+      .map(unit => multiply_line_matrix2(unit, e.matrix))
+      .map(unit => [...unit, attribute_list(e)]))
+    .reduce((a, b) => a.concat(b), []);
+
+  const o = Object.assign(Object.assign({}, DEFAULTS), options);
+
+  if (o.svg) {
+    const newSVG = window.document.createElementNS(svgNS, "svg");
+    // copy over attributes
+    svgAttributes.map(a => ({ attribute: a, value: inputSVG.getAttribute(a) }))
+      .filter(obj => obj.value != null && obj.value !== "")
+      .forEach(obj => newSVG.setAttribute(obj.attribute, obj.value));
+    // xmlns is required. make sure it's present
+    if (newSVG.getAttribute("xmlns") === null) {
+      newSVG.setAttribute("xmlns", svgNS);
+    }
+    // copy over <style> elements
+    const styles = elements
+      .filter(e => e.tagName === "style" || e.tagName === "defs");
+    if (styles.length > 0) {
+      styles.map(style => style.cloneNode(true))
+        .forEach(style => newSVG.appendChild(style));
+    }
+    // write lineSegments into the svg
+    lineSegments.forEach((s) => {
+      const line = window.document.createElementNS(svgNS, "line");
+      line.setAttributeNS(null, "x1", s[0]);
+      line.setAttributeNS(null, "y1", s[1]);
+      line.setAttributeNS(null, "x2", s[2]);
+      line.setAttributeNS(null, "y2", s[3]);
+      if (s[4] != null) {
+        s[4].forEach(attr => line.setAttribute(attr.nodeName, attr.nodeValue));
+      }
+      newSVG.appendChild(line);
+    });
+    return newSVG;
+  }
+  return lineSegments;
 };
+
+export default Segmentize;
+
+// export {
+//   svg,
+//   withAttributes,
+//   segments,
+//   transformIntoMatrix,
+// };
 
 // export default main;

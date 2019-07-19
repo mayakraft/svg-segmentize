@@ -1,3 +1,4 @@
+const { DOMParser, XMLSerializer } = require("xmldom");
 const Segmentize = require("../svg-segmentize");
 
 const allPrimitives = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="75 75 350 350" width="45vmax" height="45vmax">
@@ -31,14 +32,8 @@ const allPrimitives = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" vie
     </g>
   </svg>`;
 
-
-// const a_svg = Segmentize.svg(allPrimitives);
-Segmentize.svg(allPrimitives);
-const a_segments = Segmentize.segments(allPrimitives);
-const a_withAttrs = Segmentize.withAttributes(allPrimitives);
-
-console.log(a_segments.length === a_withAttrs.length
-  ? "test passes" : "test fail. array lengths should match", a_segments.length, a_withAttrs.length);
+Segmentize(allPrimitives, { svg: true });
+Segmentize(allPrimitives, {});
 
 const small = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <!-- comment -->
@@ -46,47 +41,65 @@ const small = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 
   <line stroke="black" x1="0" y1="0" x2="100" y2="100"/>
 </svg>`;
 
-const b_svg = Segmentize.svg(small);
-const b_segments = Segmentize.segments(small);
-const b_withAttrs = Segmentize.withAttributes(small);
+const b_svg = Segmentize(small, { svg: true });
+const b_segments = Segmentize(small);
 
-console.log("-------\n#1 svg\n", b_svg);
-console.log("-------\n#2 segments\n", b_segments);
-console.log("-------\n#3 withAttributes\n", b_withAttrs);
+// console.log("-------\n#1 svg\n", b_svg);
+// console.log("-------\n#2 segments\n", b_segments);
 
-console.log(b_segments.length === b_withAttrs.length && b_segments.length === 5
-  ? "test passes" : "test fail. array lengths should match", b_segments.length, b_withAttrs.length);
+const line = (new DOMParser()).parseFromString("<line transform='rotate(-90 10 10)' x1='10' y1='10' x2='50' y2='50'/>", "text/xml").documentElement;
 
-// const ellipse = (new DOMParser()).parseFromString(`<ellipse  transform="rotate(-30 360 200)" class="pen no-fill" stroke-dashArray="7 2 1 2 " cx="360" cy="200" rx="12.5" ry="37.5"/>`, "text/xml").documentElement;
+const lineSegments = Segmentize(line);
+
+const test1 = lineSegments[0][0] === 10
+  && lineSegments[0][1] === 10
+  && lineSegments[0][2] === 50
+  && lineSegments[0][3] === -30;
 
 // const eTransform = Array.from(ellipse.attributes).filter(e => e.nodeName === "transform").shift();
 // console.log(ellipse);
 // console.log(eTransform.baseVal);
 
-const m = Segmentize.transformIntoMatrix("translate(1,2),scale(0.5,-5),a(1,1,2,3),b(1)");
-const m2 = Segmentize.transformIntoMatrix("translate(1 2) scale(0.5 -5) a(1 1 2 3) b(1)");
+// const m = Segmentize.transformIntoMatrix("translate(1,2),scale(0.5,-5),a(1,1,2,3),b(1)");
+// const m2 = Segmentize.transformIntoMatrix("translate(1 2) scale(0.5 -5) a(1 1 2 3) b(1)");
 
-console.log(m);
-console.log(m2);
+// console.log(m);
+// console.log(m2);
 
-const m3 = Segmentize.transformIntoMatrix("rotate(180) matrix(1,0,0,-1,0,0) translate(10, 0) skewX(10) skewY(2) scale(2, 2)");
+// const m3 = Segmentize.transformIntoMatrix("rotate(180) matrix(1,0,0,-1,0,0) translate(10, 0) skewX(10) skewY(2) scale(2, 2)");
 
-console.log(m3);
+// console.log(m3);
 
-const nested = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <style>rect { stroke: black; fill: none;}</style>
-  <rect width="100" height="100"/>
-  <g transform="rotate(5 50 50)">
-    <rect width="100" height="100"/>
-    <g transform="translate(50 50) scale(0.707) translate(-50 -50)">
-      <rect width="100" height="100"/>
-      <g transform="translate(50 50) scale(0.707) translate(-50 -50)">
-        <rect width="100" height="100"/>
-        <g transform="rotate(45 50 50)">
-          <rect width="100" height="100"/>
+const nested_transforms = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>line, rect { stroke: black; fill: none;}</style>
+  <rect width="10" height="10"/>
+  <g transform="translate(50 50)">
+    <rect width="10" height="10"/>
+    <g transform="rotate(45)">
+      <rect width="10" height="10"/>
+      <g transform="translate(10 10)">
+        <rect width="10" height="10"/>
+        <g transform="translate(10 10)">
+          <rect width="10" height="10"/>
         </g>
+      </g>
+      <g transform="scale(0.707)">
+        <rect width="10" height="10"/>
       </g>
     </g>
   </g>
-</svg>
-`;
+</svg>`;
+
+const nested = Segmentize(nested_transforms, { svg: true });
+
+// const str =
+(new XMLSerializer()).serializeToString(nested);
+// console.log("nested", nested);
+// console.log("str", str);
+
+if (test1) {
+  console.log("tests passed");
+} else {
+  throw new Error("tests failed");
+}

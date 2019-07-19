@@ -1,6 +1,9 @@
 const { DOMParser, XMLSerializer } = require("xmldom");
 const Segmentize = require("../svg-segmentize");
 
+// add booleans into this array
+const tests = [];
+
 const allPrimitives = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="75 75 350 350" width="45vmax" height="45vmax">
     <style type="text/css">
       .pen { stroke: black; }
@@ -41,20 +44,26 @@ const small = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 
   <line stroke="black" x1="0" y1="0" x2="100" y2="100"/>
 </svg>`;
 
-const b_svg = Segmentize(small, { svg: true });
+const b_svg = Segmentize(small, { svg: true, string: false });
+const b_svg_string = Segmentize(small, { svg: true });
 const b_segments = Segmentize(small);
 
-// console.log("-------\n#1 svg\n", b_svg);
-// console.log("-------\n#2 segments\n", b_segments);
+tests.push(typeof b_svg === "object");
+tests.push(typeof b_svg_string === "string");
+tests.push(typeof b_segments === "object");
+
+console.log("\n-------\n#1 svg\n", b_svg_string);
+console.log("\n-------\n#2 segments\n", b_segments);
 
 const line = (new DOMParser()).parseFromString("<line transform='rotate(-90 10 10)' x1='10' y1='10' x2='50' y2='50'/>", "text/xml").documentElement;
 
 const lineSegments = Segmentize(line);
 
-const test1 = lineSegments[0][0] === 10
+const testTransform = lineSegments[0][0] === 10
   && lineSegments[0][1] === 10
   && lineSegments[0][2] === 50
   && lineSegments[0][3] === -30;
+tests.push(testTransform);
 
 // const eTransform = Array.from(ellipse.attributes).filter(e => e.nodeName === "transform").shift();
 // console.log(ellipse);
@@ -98,7 +107,7 @@ const nested = Segmentize(nested_transforms, { svg: true });
 // console.log("nested", nested);
 // console.log("str", str);
 
-if (test1) {
+if (tests.reduce((a, b) => a && b, true)) {
   console.log("tests passed");
 } else {
   throw new Error("tests failed");

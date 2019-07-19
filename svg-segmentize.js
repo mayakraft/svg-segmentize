@@ -806,6 +806,56 @@
     path: svg_path_to_segments,
   };
 
+  function vkXML (text, step) {
+    const ar = text.replace(/>\s{0,}</g, "><")
+      .replace(/</g, "~::~<")
+      .replace(/\s*xmlns\:/g, "~::~xmlns:")
+      .split("~::~");
+    const len = ar.length;
+    let inComment = false;
+    let deep = 0;
+    let str = "";
+    const space = (step != null && typeof step === "string" ? step : "\t");
+    const shift = ["\n"];
+    for (let si = 0; si < 100; si += 1) {
+      shift.push(shift[si] + space);
+    }
+    for (let ix = 0; ix < len; ix += 1) {
+      if (ar[ix].search(/<!/) > -1) {
+        str += shift[deep] + ar[ix];
+        inComment = true;
+        if (ar[ix].search(/-->/) > -1 || ar[ix].search(/\]>/) > -1
+          || ar[ix].search(/!DOCTYPE/) > -1) {
+          inComment = false;
+        }
+      } else if (ar[ix].search(/-->/) > -1 || ar[ix].search(/\]>/) > -1) {
+        str += ar[ix];
+        inComment = false;
+      } else if (/^<\w/.exec(ar[ix - 1]) && /^<\/\w/.exec(ar[ix])
+        && /^<[\w:\-\.\,]+/.exec(ar[ix - 1])
+        == /^<\/[\w:\-\.\,]+/.exec(ar[ix])[0].replace("/", "")) {
+        str += ar[ix];
+        if (!inComment) { deep -= 1; }
+      } else if (ar[ix].search(/<\w/) > -1 && ar[ix].search(/<\//) === -1
+        && ar[ix].search(/\/>/) === -1) {
+        str = !inComment ? str += shift[deep++] + ar[ix] : str += ar[ix];
+      } else if (ar[ix].search(/<\w/) > -1 && ar[ix].search(/<\//) > -1) {
+        str = !inComment ? str += shift[deep] + ar[ix] : str += ar[ix];
+      } else if (ar[ix].search(/<\//) > -1) {
+        str = !inComment ? str += shift[--deep] + ar[ix] : str += ar[ix];
+      } else if (ar[ix].search(/\/>/) > -1) {
+        str = !inComment ? str += shift[deep] + ar[ix] : str += ar[ix];
+      } else if (ar[ix].search(/<\?/) > -1) {
+        str += shift[deep] + ar[ix];
+      } else if (ar[ix].search(/xmlns\:/) > -1 || ar[ix].search(/xmlns\=/) > -1) {
+        str += shift[deep] + ar[ix];
+      } else {
+        str += ar[ix];
+      }
+    }
+    return (str[0] === "\n") ? str.slice(1) : str;
+  }
+
   const isBrowser = function () {
     return typeof window !== "undefined";
   };
@@ -972,9 +1022,15 @@
       .filter(a => shape_attr[element.tagName].indexOf(a.name) === -1);
   };
   const DEFAULTS = {
-    style: true,
-    flatten: true,
+    string: true,
     svg: false,
+  };
+  const objectifyAttributeList = function (list) {
+    const obj = {};
+    list.forEach((a) => {
+      obj[a.nodeName] = a.value;
+    });
+    return obj;
   };
   const Segmentize = function (input, options) {
     const inputSVG = stringToDomTree(input);
@@ -986,6 +1042,12 @@
         .map(unit => multiply_line_matrix2(unit, e.matrix))
         .map(unit => [...unit, attribute_list(e)]))
       .reduce((a, b) => a.concat(b), []);
+    lineSegments
+      .filter(a => a[4] !== undefined)
+      .forEach((seg) => {
+        const noTransforms = seg[4].filter(a => a.nodeName !== "transform");
+        seg[4] = objectifyAttributeList(noTransforms);
+      });
     const o = Object.assign(Object.assign({}, DEFAULTS), options);
     if (o.svg) {
       const newSVG = win.document.createElementNS(svgNS, "svg");
@@ -1008,11 +1070,14 @@
         line.setAttributeNS(null, "x2", s[2]);
         line.setAttributeNS(null, "y2", s[3]);
         if (s[4] != null) {
-          s[4].forEach(attr => line.setAttribute(attr.nodeName, attr.nodeValue));
+          Object.keys(s[4]).forEach(key => line.setAttribute(key, s[4][key]));
         }
         newSVG.appendChild(line);
       });
-      return newSVG;
+      if (o.string === false) { return newSVG; }
+      const stringified = new win.XMLSerializer().serializeToString(newSVG);
+      const beautified = vkXML(stringified);
+      return beautified;
     }
     return lineSegments;
   };

@@ -2,7 +2,11 @@
 
 [![Build Status](https://travis-ci.org/robbykraft/svg-segmentize.svg?branch=master)](https://travis-ci.org/robbykraft/svg-segmentize)
 
-this processes an .svg into a copy containing only (straight) line segments. it can handle every shape in the SVG 1.1 specification:
+this processes an .svg into a copy containing only (straight) line segments.
+
+*see an [example here](https://robbykraft.github.io/svg-segmentize/test/) segmented image is on the right*
+
+this can handle every shape in the SVG 1.1 specification:
 
 - line
 - rect
@@ -12,97 +16,116 @@ this processes an .svg into a copy containing only (straight) line segments. it 
 - polyline
 - path
 
-all attributes (style, inline style, and presentation) are copied over as well. you'll discover that
+all attributes from the original geometry are carried over and applied to the corresponding line(s). you'll notice that:
 
-- transforms continue to work
 - fills disappear (there are no closed shapes anymore)
 - dashed lines are only visible on long line segments (not curves)
 
-see an [example here](https://robbykraft.github.io/svg-segmentize/test/) *segmented image is on the right*
+### transforms
 
-## input
+special attention is given to the transform attribute. consider the example:
+
+```xml
+<g transform="translate(50 30)">
+  <line x1="0" y1="0" x2="10" y2="10"/>
+</g>
+```
+
+SVG transforms are applied in a nested manner. this library recurses through the tree and builds a matrix stack, making sure the example above outputs one line as:
+
+```javascript
+[
+  [50, 30, 60, 40]
+]
+```
+
+### input
 
 the input can be one of two types:
 
-- string containing SVG in valid XML encoding
-- DOM level-2 Element node
+- SVG, stringified
+- SVG, as a DOM level-2 Element node
 
-## output
+### output
 
-the output can be one of two types:
-
-- image: SVG image as a XML-encoded string
-- data: the line segment points in array form
-
-### usage 1: SVG output
-
-```javascript
-Segmentize.svg(svgElement);
-```
-
-**output**: a new svg representation containing only `<line>` geometry
-
-the new svg contains copies of any `<style>` definitions and applies any `class` from the old geometry to its new corresponding line(s).
-
-> see example `test/index.html`
-
-### usage 2: data output
-
-This is available two ways:
-
-1. the line endpoints, nothing more. `[x1, y1, x2, y2]`
-2. the line endpoints, with all the accompanying attributes, `style`, `fill`, `stroke`, anything else contained on the element.
-
-```javascript
-Segmentize.segments(svgElement);
-```
-
-```javascript
-Segmentize.withAttributes(svgElement);
-```
-
-**output segments**: an array of arrays of numbers, where each segment is encoded. `[x1, y1, x2, y2]`
+**by default** the output is an array of arrays: the line segment points in array form. the **options** argument below describes how to make the output an SVG.
 
 ```javascript
 [
-  [197.5, 185, 160, 250],
-  [340, 250, 302.5, 185],
-  [187.5, 92.5, 262.5, 92.5],
+  [0, 0, 10, 10, {}],
+  [50, 40, 100, 150, {}],
   ...
 ]
 ```
 
-**output withAttributes**: an array of objects, each attribute including x1, y1, x2, y2 are keys with their associated values.
+lines in array form are defined by their endpoints: `[x1, y1, x2, y2]`
+
+### that last array element
+
+for every segment an object sits at array spot [4], this object contains all the attributes from the original geometry element, minus any transforms.
+
+the output in full would look something like:
 
 ```javascript
 [
-  { x1: 355.5,
-    y1: 234,
-    x2: 354.1,
-    y2: 233,
-    transform: 'rotate(-30 360 200)',
-    class: 'pen no-fill',
+  [197.5, 185, 160, 250, {
+    class: 'thick no-fill',
     'stroke-dashArray': '7 2 1 2 '
-  },
-  { x1: 389,
-    y1: 306,
-    x2: 390,
-    y2: 310,
+  }],
+  [187.5, 92.5, 262.5, 92.5, {
     class: 'pen',
     fill: 'url(#gradient)'
-  },
+  }],
   ...
 ]
 ```
 
-# todo
+## usage
 
-options parameter, which includes the resolution of curves.
+web
 
-# notes
+```javascript
+let lineSegments = Segmentize(svgElement);
+```
 
-the [getPointAtLength](https://developer.mozilla.org/en-US/docs/Web/API/SVGGeometryElement/getPointAtLength) method is implemented in all browsers but doesn't exist in node, hence, the svg-path-properties library. If you don't need to convert `<path>` items, this can be removed, cutting the library file size in half.
+node
 
-# license
+```javascript
+const Segmentize = require("svg-segmentize");
+
+let lineSegments = Segmentize(svgElement);
+```
+
+the input parameter must be an SVG, but it can be in one of two forms:
+
+- stringified
+- XML DOM node
+
+### options
+
+```javascript
+let svg = Segmentize(svgElement, { svg: true });
+```
+
+the second parameter is an options object. the options so far:
+
+- svg: **boolean** *default false*
+- string: **boolean** *default true*
+
+**svg** setting true will make the output an SVG. this will render as a string unless..
+
+**string** set false, and the SVG will be output as a DOM node. (only used if **svg** is true)
+
+## todo
+
+- options parameter to include the resolution of curves
+
+- transforms inside a `<style>` aren't parsed.
+
+## notes
+
+the [getPointAtLength](https://developer.mozilla.org/en-US/docs/Web/API/SVGGeometryElement/getPointAtLength) method is implemented in all browsers but doesn't exist in node, hence, the svg-path-properties library. If you don't need to convert `<path>` items, this can be removed, shrinking the library size substantially.
+
+## license
 
 MIT

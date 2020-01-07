@@ -65,12 +65,23 @@ const testTransform = lineSegments[0][0] === 10
   && lineSegments[0][3] === -30;
 tests.push(testTransform);
 
+// ///////////////////////////////////////////////
+// small entries
+const min0 = Segmentize("<line />");
+const min1 = Segmentize("<svg><line /></svg>");
+const min2 = Segmentize("<svg><line x1='50' y1='50' x2='100' y2='100' /></svg>");
+tests.push(min0.length === 1);
+tests.push(min1.length === 1);
+tests.push(min2.length === 1);
+tests.push(min1[0][0] === 0 && min1[0][1] === 0 && min1[0][2] === 0 && min1[0][3] === 0);
+
+// const ellipse = '<ellipse transform="rotate(-30 360 200)" class="pen no-fill" stroke-dashArray="7 2 1 2 " cx="360" cy="200" rx="50" ry="50"/>';
 // const eTransform = Array.from(ellipse.attributes).filter(e => e.nodeName === "transform").shift();
 // console.log(ellipse);
 // console.log(eTransform.baseVal);
 
-// const m = Segmentize.transformIntoMatrix("translate(1,2),scale(0.5,-5),a(1,1,2,3),b(1)");
-// const m2 = Segmentize.transformIntoMatrix("translate(1 2) scale(0.5 -5) a(1 1 2 3) b(1)");
+// const m = Segmentize.transformStringToMatrix("translate(1,2),scale(0.5,-5),a(1,1,2,3),b(1)");
+// const m2 = Segmentize.transformStringToMatrix("translate(1 2) scale(0.5 -5) a(1 1 2 3) b(1)");
 
 // console.log(m);
 // console.log(m2);

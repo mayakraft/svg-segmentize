@@ -1,16 +1,3 @@
-/**
- * parse the value of a SVG transform attribute
- * @param {string} transform, like "translate(20 30) rotate(30) skewY(10)"
- * @returns {object[]} array of objects, {transform:__, parameters:__}
- */
-export const parseTransform = function (transform) {
-  const parsed = transform.match(/(\w+\((\-?\d+\.?\d*e?\-?\d*,?\s*)+\))+/g);
-  const listForm = parsed.map(a => a.match(/[\w\.\-]+/g));
-  return listForm.map(a => ({
-    transform: a.shift(),
-    parameters: a.map(p => parseFloat(p)),
-  }));
-};
 
 /**
  * this converts "stroke-width" into "strokeWidth"
@@ -22,7 +9,7 @@ const camelize = function (str) {
     : c));
 };
 
-export const parseStyle = function (el) {
+const parseStyle = function (el) {
   const output = {};
   if (!el || !el.style || !el.style.cssText) {
     return output;
@@ -38,3 +25,5 @@ export const parseStyle = function (el) {
   }
   return output;
 };
+
+export default parseStyle;

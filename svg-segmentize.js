@@ -7,28 +7,8 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
-  (global.Segmentize = factory());
+  (global = global || self, global.Segmentize = factory());
 }(this, (function () { 'use strict';
-
-  function _toConsumableArray(arr) {
-    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
-  }
-
-  function _arrayWithoutHoles(arr) {
-    if (Array.isArray(arr)) {
-      for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-      return arr2;
-    }
-  }
-
-  function _iterableToArray(iter) {
-    if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
-  }
-
-  function _nonIterableSpread() {
-    throw new TypeError("Invalid attempt to spread non-iterable instance");
-  }
 
   var length = {
     a: 7,
@@ -855,12 +835,13 @@
   };
 
   var svg_circle_to_segments = function svg_circle_to_segments(circle) {
+    var RESOLUTION = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : RES_CIRCLE;
     var attrs = getAttributes(circle, ["cx", "cy", "r"]);
     var cx = parseFloat(attrs[0]);
     var cy = parseFloat(attrs[1]);
     var r = parseFloat(attrs[2]);
-    return Array.from(Array(RES_CIRCLE)).map(function (_, i) {
-      return [cx + r * Math.cos(i / RES_CIRCLE * Math.PI * 2), cy + r * Math.sin(i / RES_CIRCLE * Math.PI * 2)];
+    return Array.from(Array(RESOLUTION)).map(function (_, i) {
+      return [cx + r * Math.cos(i / RESOLUTION * Math.PI * 2), cy + r * Math.sin(i / RESOLUTION * Math.PI * 2)];
     }).map(function (_, i, arr) {
       return [arr[i][0], arr[i][1], arr[(i + 1) % arr.length][0], arr[(i + 1) % arr.length][1]];
     });
@@ -901,12 +882,13 @@
   };
 
   var svg_path_to_segments = function svg_path_to_segments(path) {
+    var RESOLUTION = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : RES_PATH;
     var d = path.getAttribute("d");
     var prop = PathProperties(d);
     var length = prop.getTotalLength();
     var isClosed = d[d.length - 1] === "Z" || d[d.length - 1] === "z";
-    var segmentLength = isClosed ? length / RES_PATH : length / (RES_PATH - 1);
-    var pathsPoints = Array.from(Array(RES_PATH)).map(function (_, i) {
+    var segmentLength = isClosed ? length / RESOLUTION : length / (RESOLUTION - 1);
+    var pathsPoints = Array.from(Array(RESOLUTION)).map(function (_, i) {
       return prop.getPointAtLength(i * segmentLength);
     }).map(function (p) {
       return [p.x, p.y];
@@ -982,30 +964,92 @@
     return str[0] === "\n" ? str.slice(1) : str;
   }
 
-  var isBrowser = function isBrowser() {
-    return typeof window !== "undefined";
-  };
+  function _typeof(obj) {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function (obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function (obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
 
-  var isNode = function isNode() {
-    return typeof window === "undefined" && typeof process !== "undefined";
-  };
+    return _typeof(obj);
+  }
+
+  function _toConsumableArray(arr) {
+    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+  }
+
+  function _arrayWithoutHoles(arr) {
+    if (Array.isArray(arr)) {
+      for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+      return arr2;
+    }
+  }
+
+  function _iterableToArray(iter) {
+    if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
+  }
+
+  function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance");
+  }
+
+  var isBrowser = typeof window !== "undefined" && typeof window.document !== "undefined";
+  var isNode = typeof process !== "undefined" && process.versions != null && process.versions.node != null;
+  var isWebWorker = (typeof self === "undefined" ? "undefined" : _typeof(self)) === "object" && self.constructor && self.constructor.name === "DedicatedWorkerGlobalScope";
 
   var htmlString = "<!DOCTYPE html><title> </title>";
-  var win = {};
 
-  if (isNode()) {
-    var _require = require("xmldom"),
-        DOMParser = _require.DOMParser,
-        XMLSerializer = _require.XMLSerializer;
+  var win = function () {
+    var w = {};
 
-    win.DOMParser = DOMParser;
-    win.XMLSerializer = XMLSerializer;
-    win.document = new DOMParser().parseFromString(htmlString, "text/html");
-  } else if (isBrowser()) {
-    win.DOMParser = window.DOMParser;
-    win.XMLSerializer = window.XMLSerializer;
-    win.document = window.document;
-  }
+    if (isNode) {
+      var _require = require("xmldom"),
+          DOMParser = _require.DOMParser,
+          XMLSerializer = _require.XMLSerializer;
+
+      w.DOMParser = DOMParser;
+      w.XMLSerializer = XMLSerializer;
+      w.document = new DOMParser().parseFromString(htmlString, "text/html");
+    } else if (isBrowser) {
+      w = window;
+    }
+
+    return w;
+  }();
+
+  var svgNS = "http://www.w3.org/2000/svg";
+
+  var xmlStringToDOM = function xmlStringToDOM(input) {
+    return typeof input === "string" || input instanceof String ? new win.DOMParser().parseFromString(input, "text/xml").documentElement : input;
+  };
+
+  var flattenTree = function flattenTree(element) {
+    if (element.tagName === "g" || element.tagName === "svg") {
+      if (element.childNodes == null) {
+        return [];
+      }
+
+      return Array.from(element.childNodes).map(function (child) {
+        return flattenTree(child);
+      }).reduce(function (a, b) {
+        return a.concat(b);
+      }, []);
+    }
+
+    return [element];
+  };
+
+  var multiply_line_matrix2 = function multiply_line_matrix2(line, matrix) {
+    return [line[0] * matrix[0] + line[1] * matrix[2] + matrix[4], line[0] * matrix[1] + line[1] * matrix[3] + matrix[5], line[2] * matrix[0] + line[3] * matrix[2] + matrix[4], line[2] * matrix[1] + line[3] * matrix[3] + matrix[5]];
+  };
+  var multiply_matrices2 = function multiply_matrices2(m1, m2) {
+    return [m1[0] * m2[0] + m1[2] * m2[1], m1[1] * m2[0] + m1[3] * m2[1], m1[0] * m2[2] + m1[2] * m2[3], m1[1] * m2[2] + m1[3] * m2[3], m1[0] * m2[4] + m1[2] * m2[5] + m1[4], m1[1] * m2[4] + m1[3] * m2[5] + m1[5]];
+  };
 
   var parseTransform = function parseTransform(transform) {
     var parsed = transform.match(/(\w+\((\-?\d+\.?\d*e?\-?\d*,?\s*)+\))+/g);
@@ -1020,14 +1064,6 @@
         })
       };
     });
-  };
-
-  var multiply_line_matrix2 = function multiply_line_matrix2(line, matrix) {
-    return [line[0] * matrix[0] + line[1] * matrix[2] + matrix[4], line[0] * matrix[1] + line[1] * matrix[3] + matrix[5], line[2] * matrix[0] + line[3] * matrix[2] + matrix[4], line[2] * matrix[1] + line[3] * matrix[3] + matrix[5]];
-  };
-
-  var multiply_matrices2 = function multiply_matrices2(m1, m2) {
-    return [m1[0] * m2[0] + m1[2] * m2[1], m1[1] * m2[0] + m1[3] * m2[1], m1[0] * m2[2] + m1[2] * m2[3], m1[1] * m2[2] + m1[3] * m2[3], m1[0] * m2[4] + m1[2] * m2[5] + m1[4], m1[1] * m2[4] + m1[3] * m2[5] + m1[5]];
   };
 
   var matrixFormTranslate = function matrixFormTranslate(params) {
@@ -1113,7 +1149,7 @@
     return undefined;
   };
 
-  var transformIntoMatrix = function transformIntoMatrix(string) {
+  var transformStringToMatrix = function transformStringToMatrix(string) {
     return parseTransform(string).map(function (el) {
       return matrixForm(el.transform, el.parameters);
     }).filter(function (a) {
@@ -1123,7 +1159,7 @@
     }, [1, 0, 0, 1, 0, 0]);
   };
 
-  var getElementsTransform = function getElementsTransform(element) {
+  var get_transform_as_matrix = function get_transform_as_matrix(element) {
     if (typeof element.getAttribute !== "function") {
       return [1, 0, 0, 1, 0, 0];
     }
@@ -1131,7 +1167,7 @@
     var transformAttr = element.getAttribute("transform");
 
     if (transformAttr != null && transformAttr !== "") {
-      return transformIntoMatrix(transformAttr);
+      return transformStringToMatrix(transformAttr);
     }
 
     return [1, 0, 0, 1, 0, 0];
@@ -1139,7 +1175,7 @@
 
   var apply_nested_transforms = function apply_nested_transforms(element) {
     var stack = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [1, 0, 0, 1, 0, 0];
-    var local = multiply_matrices2(stack, getElementsTransform(element));
+    var local = multiply_matrices2(stack, get_transform_as_matrix(element));
     element.matrix = local;
 
     if (element.tagName === "g" || element.tagName === "svg") {
@@ -1154,7 +1190,6 @@
   };
 
   var parseable = Object.keys(parsers);
-  var svgNS = "http://www.w3.org/2000/svg";
   var DEFAULTS = {
     string: true,
     svg: false
@@ -1168,26 +1203,6 @@
     polygon: ["points"],
     polyline: ["points"],
     path: ["d"]
-  };
-
-  var stringToDomTree = function stringToDomTree(input) {
-    return typeof input === "string" || input instanceof String ? new win.DOMParser().parseFromString(input, "text/xml").documentElement : input;
-  };
-
-  var flatten_tree = function flatten_tree(element) {
-    if (element.tagName === "g" || element.tagName === "svg") {
-      if (element.childNodes == null) {
-        return [];
-      }
-
-      return Array.from(element.childNodes).map(function (child) {
-        return flatten_tree(child);
-      }).reduce(function (a, b) {
-        return a.concat(b);
-      }, []);
-    }
-
-    return [element];
   };
 
   var attribute_list = function attribute_list(element) {
@@ -1205,9 +1220,9 @@
   };
 
   var Segmentize = function Segmentize(input, options) {
-    var inputSVG = stringToDomTree(input);
+    var inputSVG = xmlStringToDOM(input);
     apply_nested_transforms(inputSVG);
-    var elements = flatten_tree(inputSVG);
+    var elements = flattenTree(inputSVG);
     var lineSegments = elements.filter(function (e) {
       return parseable.indexOf(e.tagName) !== -1;
     }).map(function (e) {

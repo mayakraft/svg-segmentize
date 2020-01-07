@@ -4,7 +4,7 @@
  *  [ x1, y1, x2, y2 ]
  */
 
-import PathProperties from "../include/svg-path-properties/path-properties";
+import PathProperties from "../../include/svg-path-properties/path-properties";
 
 const RES_CIRCLE = 64;
 const RES_PATH = 128;
@@ -53,15 +53,15 @@ const svg_rect_to_segments = function (rect) {
     [x, y + height, x, y],
   ];
 };
-const svg_circle_to_segments = function (circle) {
+const svg_circle_to_segments = function (circle, RESOLUTION = RES_CIRCLE) {
   const attrs = getAttributes(circle, ["cx", "cy", "r"]);
   const cx = parseFloat(attrs[0]);
   const cy = parseFloat(attrs[1]);
   const r = parseFloat(attrs[2]);
-  return Array.from(Array(RES_CIRCLE))
+  return Array.from(Array(RESOLUTION))
     .map((_, i) => [
-      cx + r * Math.cos(i / RES_CIRCLE * Math.PI * 2),
-      cy + r * Math.sin(i / RES_CIRCLE * Math.PI * 2),
+      cx + r * Math.cos(i / RESOLUTION * Math.PI * 2),
+      cy + r * Math.sin(i / RESOLUTION * Math.PI * 2),
     ]).map((_, i, arr) => [
       arr[i][0],
       arr[i][1],
@@ -107,15 +107,15 @@ const svg_polyline_to_segments = function (polyline) {
   circularPath.pop();
   return circularPath;
 };
-const svg_path_to_segments = function (path) {
+const svg_path_to_segments = function (path, RESOLUTION = RES_PATH) {
   const d = path.getAttribute("d");
   const prop = PathProperties(d); // path properties
   const length = prop.getTotalLength();
   const isClosed = (d[d.length - 1] === "Z" || d[d.length - 1] === "z");
   const segmentLength = (isClosed
-    ? length / RES_PATH
-    : length / (RES_PATH - 1));
-  const pathsPoints = Array.from(Array(RES_PATH))
+    ? length / RESOLUTION
+    : length / (RESOLUTION - 1));
+  const pathsPoints = Array.from(Array(RESOLUTION))
     .map((_, i) => prop.getPointAtLength(i * segmentLength))
     .map(p => [p.x, p.y]);
   const segments = pathsPoints.map((_, i, a) => [

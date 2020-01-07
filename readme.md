@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/robbykraft/svg-segmentize.svg?branch=master)](https://travis-ci.org/robbykraft/svg-segmentize)
 
-this processes an .svg into a copy containing only (straight) line segments.
+this converts an SVG image into a copy containing only (straight) line segments, ensuring **no overlapping lines/paths/shapes**, a necessary condition of [planar graphs](https://en.wikipedia.org/wiki/Planar_graph).
 
 *see an [example here](https://robbykraft.github.io/svg-segmentize/test/) segmented image is on the right*
 
@@ -19,7 +19,44 @@ this can handle every shape in the SVG 1.1 specification:
 all attributes from the original geometry are carried over and applied to the corresponding line(s). you'll notice that:
 
 - fills disappear (there are no closed shapes anymore)
-- dashed lines are only visible on long line segments (not curves)
+- dashed lines are no longer visible on curves (curves become many short lines)
+
+## usage
+
+web
+
+```javascript
+let lineSegments = Segmentize(inputSVG);
+```
+
+node
+
+```javascript
+const Segmentize = require("svg-segmentize");
+
+let lineSegments = Segmentize(inputSVG);
+```
+
+arguments (2):
+
+- **inputSVG** must be an SVG, but it can be in one of two forms:
+- options is an optional Javascript object. Keys are as follows:
+
+```javascript
+let svg = Segmentize(inputSVG, { svg: true });
+```
+
+- svg: **boolean** *default false*
+- string: **boolean** *default true*
+
+**svg** setting true will make the output an SVG. this will render as a string unless..
+
+**string** set false, and the SVG will be output as a DOM node. (only used if **svg** is true)
+
+- stringified
+- XML DOM node
+
+## notes
 
 ### transforms
 
@@ -79,42 +116,6 @@ the output in full would look something like:
   ...
 ]
 ```
-
-## usage
-
-web
-
-```javascript
-let lineSegments = Segmentize(svgElement);
-```
-
-node
-
-```javascript
-const Segmentize = require("svg-segmentize");
-
-let lineSegments = Segmentize(svgElement);
-```
-
-the input parameter must be an SVG, but it can be in one of two forms:
-
-- stringified
-- XML DOM node
-
-### options
-
-```javascript
-let svg = Segmentize(svgElement, { svg: true });
-```
-
-the second parameter is an options object. the options so far:
-
-- svg: **boolean** *default false*
-- string: **boolean** *default true*
-
-**svg** setting true will make the output an SVG. this will render as a string unless..
-
-**string** set false, and the SVG will be output as a DOM node. (only used if **svg** is true)
 
 ## todo
 

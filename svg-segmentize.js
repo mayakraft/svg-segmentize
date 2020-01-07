@@ -10,6 +10,114 @@
   (global = global || self, global.Segmentize = factory());
 }(this, (function () { 'use strict';
 
+  function vkXML (text, step) {
+    var ar = text.replace(/>\s{0,}</g, "><").replace(/</g, "~::~<").replace(/\s*xmlns\:/g, "~::~xmlns:").split("~::~");
+    var len = ar.length;
+    var inComment = false;
+    var deep = 0;
+    var str = "";
+    var space = step != null && typeof step === "string" ? step : "\t";
+    var shift = ["\n"];
+
+    for (var si = 0; si < 100; si += 1) {
+      shift.push(shift[si] + space);
+    }
+
+    for (var ix = 0; ix < len; ix += 1) {
+      if (ar[ix].search(/<!/) > -1) {
+        str += shift[deep] + ar[ix];
+        inComment = true;
+
+        if (ar[ix].search(/-->/) > -1 || ar[ix].search(/\]>/) > -1 || ar[ix].search(/!DOCTYPE/) > -1) {
+          inComment = false;
+        }
+      } else if (ar[ix].search(/-->/) > -1 || ar[ix].search(/\]>/) > -1) {
+        str += ar[ix];
+        inComment = false;
+      } else if (/^<\w/.exec(ar[ix - 1]) && /^<\/\w/.exec(ar[ix]) && /^<[\w:\-\.\,]+/.exec(ar[ix - 1]) == /^<\/[\w:\-\.\,]+/.exec(ar[ix])[0].replace("/", "")) {
+        str += ar[ix];
+
+        if (!inComment) {
+          deep -= 1;
+        }
+      } else if (ar[ix].search(/<\w/) > -1 && ar[ix].search(/<\//) === -1 && ar[ix].search(/\/>/) === -1) {
+        str = !inComment ? str += shift[deep++] + ar[ix] : str += ar[ix];
+      } else if (ar[ix].search(/<\w/) > -1 && ar[ix].search(/<\//) > -1) {
+        str = !inComment ? str += shift[deep] + ar[ix] : str += ar[ix];
+      } else if (ar[ix].search(/<\//) > -1) {
+        str = !inComment ? str += shift[--deep] + ar[ix] : str += ar[ix];
+      } else if (ar[ix].search(/\/>/) > -1) {
+        str = !inComment ? str += shift[deep] + ar[ix] : str += ar[ix];
+      } else if (ar[ix].search(/<\?/) > -1) {
+        str += shift[deep] + ar[ix];
+      } else if (ar[ix].search(/xmlns\:/) > -1 || ar[ix].search(/xmlns\=/) > -1) {
+        str += shift[deep] + ar[ix];
+      } else {
+        str += ar[ix];
+      }
+    }
+
+    return str[0] === "\n" ? str.slice(1) : str;
+  }
+
+  function _typeof(obj) {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function (obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function (obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
+
+    return _typeof(obj);
+  }
+
+  function _toConsumableArray(arr) {
+    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+  }
+
+  function _arrayWithoutHoles(arr) {
+    if (Array.isArray(arr)) {
+      for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+      return arr2;
+    }
+  }
+
+  function _iterableToArray(iter) {
+    if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
+  }
+
+  function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance");
+  }
+
+  var isBrowser = typeof window !== "undefined" && typeof window.document !== "undefined";
+  var isNode = typeof process !== "undefined" && process.versions != null && process.versions.node != null;
+  var isWebWorker = (typeof self === "undefined" ? "undefined" : _typeof(self)) === "object" && self.constructor && self.constructor.name === "DedicatedWorkerGlobalScope";
+
+  var htmlString = "<!DOCTYPE html><title> </title>";
+
+  var win = function () {
+    var w = {};
+
+    if (isNode) {
+      var _require = require("xmldom"),
+          DOMParser = _require.DOMParser,
+          XMLSerializer = _require.XMLSerializer;
+
+      w.DOMParser = DOMParser;
+      w.XMLSerializer = XMLSerializer;
+      w.document = new DOMParser().parseFromString(htmlString, "text/html");
+    } else if (isBrowser) {
+      w = window;
+    }
+
+    return w;
+  }();
+
   var length = {
     a: 7,
     c: 6,
@@ -789,6 +897,7 @@
   }
 
   var RES_CIRCLE = 64;
+  var RES_ELLIPSE = 64;
   var RES_PATH = 128;
   var emptyValue = {
     value: 0
@@ -848,13 +957,14 @@
   };
 
   var svg_ellipse_to_segments = function svg_ellipse_to_segments(ellipse) {
+    var RESOLUTION = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : RES_ELLIPSE;
     var attrs = getAttributes(ellipse, ["cx", "cy", "rx", "ry"]);
     var cx = parseFloat(attrs[0]);
     var cy = parseFloat(attrs[1]);
     var rx = parseFloat(attrs[2]);
     var ry = parseFloat(attrs[3]);
-    return Array.from(Array(RES_CIRCLE)).map(function (_, i) {
-      return [cx + rx * Math.cos(i / RES_CIRCLE * Math.PI * 2), cy + ry * Math.sin(i / RES_CIRCLE * Math.PI * 2)];
+    return Array.from(Array(RESOLUTION)).map(function (_, i) {
+      return [cx + rx * Math.cos(i / RESOLUTION * Math.PI * 2), cy + ry * Math.sin(i / RESOLUTION * Math.PI * 2)];
     }).map(function (_, i, arr) {
       return [arr[i][0], arr[i][1], arr[(i + 1) % arr.length][0], arr[(i + 1) % arr.length][1]];
     });
@@ -914,118 +1024,14 @@
     path: svg_path_to_segments
   };
 
-  function vkXML (text, step) {
-    var ar = text.replace(/>\s{0,}</g, "><").replace(/</g, "~::~<").replace(/\s*xmlns\:/g, "~::~xmlns:").split("~::~");
-    var len = ar.length;
-    var inComment = false;
-    var deep = 0;
-    var str = "";
-    var space = step != null && typeof step === "string" ? step : "\t";
-    var shift = ["\n"];
-
-    for (var si = 0; si < 100; si += 1) {
-      shift.push(shift[si] + space);
-    }
-
-    for (var ix = 0; ix < len; ix += 1) {
-      if (ar[ix].search(/<!/) > -1) {
-        str += shift[deep] + ar[ix];
-        inComment = true;
-
-        if (ar[ix].search(/-->/) > -1 || ar[ix].search(/\]>/) > -1 || ar[ix].search(/!DOCTYPE/) > -1) {
-          inComment = false;
-        }
-      } else if (ar[ix].search(/-->/) > -1 || ar[ix].search(/\]>/) > -1) {
-        str += ar[ix];
-        inComment = false;
-      } else if (/^<\w/.exec(ar[ix - 1]) && /^<\/\w/.exec(ar[ix]) && /^<[\w:\-\.\,]+/.exec(ar[ix - 1]) == /^<\/[\w:\-\.\,]+/.exec(ar[ix])[0].replace("/", "")) {
-        str += ar[ix];
-
-        if (!inComment) {
-          deep -= 1;
-        }
-      } else if (ar[ix].search(/<\w/) > -1 && ar[ix].search(/<\//) === -1 && ar[ix].search(/\/>/) === -1) {
-        str = !inComment ? str += shift[deep++] + ar[ix] : str += ar[ix];
-      } else if (ar[ix].search(/<\w/) > -1 && ar[ix].search(/<\//) > -1) {
-        str = !inComment ? str += shift[deep] + ar[ix] : str += ar[ix];
-      } else if (ar[ix].search(/<\//) > -1) {
-        str = !inComment ? str += shift[--deep] + ar[ix] : str += ar[ix];
-      } else if (ar[ix].search(/\/>/) > -1) {
-        str = !inComment ? str += shift[deep] + ar[ix] : str += ar[ix];
-      } else if (ar[ix].search(/<\?/) > -1) {
-        str += shift[deep] + ar[ix];
-      } else if (ar[ix].search(/xmlns\:/) > -1 || ar[ix].search(/xmlns\=/) > -1) {
-        str += shift[deep] + ar[ix];
-      } else {
-        str += ar[ix];
-      }
-    }
-
-    return str[0] === "\n" ? str.slice(1) : str;
-  }
-
-  function _typeof(obj) {
-    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-      _typeof = function (obj) {
-        return typeof obj;
-      };
-    } else {
-      _typeof = function (obj) {
-        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-      };
-    }
-
-    return _typeof(obj);
-  }
-
-  function _toConsumableArray(arr) {
-    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
-  }
-
-  function _arrayWithoutHoles(arr) {
-    if (Array.isArray(arr)) {
-      for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-      return arr2;
-    }
-  }
-
-  function _iterableToArray(iter) {
-    if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
-  }
-
-  function _nonIterableSpread() {
-    throw new TypeError("Invalid attempt to spread non-iterable instance");
-  }
-
-  var isBrowser = typeof window !== "undefined" && typeof window.document !== "undefined";
-  var isNode = typeof process !== "undefined" && process.versions != null && process.versions.node != null;
-  var isWebWorker = (typeof self === "undefined" ? "undefined" : _typeof(self)) === "object" && self.constructor && self.constructor.name === "DedicatedWorkerGlobalScope";
-
-  var htmlString = "<!DOCTYPE html><title> </title>";
-
-  var win = function () {
-    var w = {};
-
-    if (isNode) {
-      var _require = require("xmldom"),
-          DOMParser = _require.DOMParser,
-          XMLSerializer = _require.XMLSerializer;
-
-      w.DOMParser = DOMParser;
-      w.XMLSerializer = XMLSerializer;
-      w.document = new DOMParser().parseFromString(htmlString, "text/html");
-    } else if (isBrowser) {
-      w = window;
-    }
-
-    return w;
-  }();
-
-  var svgNS = "http://www.w3.org/2000/svg";
-
-  var xmlStringToDOM = function xmlStringToDOM(input) {
-    return typeof input === "string" || input instanceof String ? new win.DOMParser().parseFromString(input, "text/xml").documentElement : input;
+  var attributes = {
+    line: ["x1", "y1", "x2", "y2"],
+    rect: ["x", "y", "width", "height"],
+    circle: ["cx", "cy", "r"],
+    ellipse: ["cx", "cy", "rx", "ry"],
+    polygon: ["points"],
+    polyline: ["points"],
+    path: ["d"]
   };
 
   var flattenTree = function flattenTree(element) {
@@ -1190,24 +1196,10 @@
   };
 
   var parseable = Object.keys(parsers);
-  var DEFAULTS = {
-    string: true,
-    svg: false
-  };
-  var svgAttributes = ["version", "xmlns", "contentScriptType", "contentStyleType", "baseProfile", "class", "externalResourcesRequired", "x", "y", "width", "height", "viewBox", "preserveAspectRatio", "zoomAndPan", "style"];
-  var shape_attr = {
-    line: ["x1", "y1", "x2", "y2"],
-    rect: ["x", "y", "width", "height"],
-    circle: ["cx", "cy", "r"],
-    ellipse: ["cx", "cy", "rx", "ry"],
-    polygon: ["points"],
-    polyline: ["points"],
-    path: ["d"]
-  };
 
   var attribute_list = function attribute_list(element) {
     return Array.from(element.attributes).filter(function (a) {
-      return shape_attr[element.tagName].indexOf(a.name) === -1;
+      return attributes[element.tagName].indexOf(a.name) === -1;
     });
   };
 
@@ -1219,17 +1211,18 @@
     return obj;
   };
 
-  var Segmentize = function Segmentize(input, options) {
-    var inputSVG = xmlStringToDOM(input);
-    apply_nested_transforms(inputSVG);
-    var elements = flattenTree(inputSVG);
-    var lineSegments = elements.filter(function (e) {
-      return parseable.indexOf(e.tagName) !== -1;
-    }).map(function (e) {
-      return parsers[e.tagName](e).map(function (unit) {
-        return multiply_line_matrix2(unit, e.matrix);
+  var segmentize = function segmentize(input) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var RESOLUTION = _typeof(options.resolution) === "object" ? options.resolution : {};
+    apply_nested_transforms(input);
+    var elements = flattenTree(input);
+    var lineSegments = elements.filter(function (el) {
+      return parseable.indexOf(el.tagName) !== -1;
+    }).map(function (el) {
+      return parsers[el.tagName](el, RESOLUTION[el.tagName]).map(function (unit) {
+        return multiply_line_matrix2(unit, el.matrix);
       }).map(function (unit) {
-        return [].concat(_toConsumableArray(unit), [attribute_list(e)]);
+        return [].concat(_toConsumableArray(unit), [attribute_list(el)]);
       });
     }).reduce(function (a, b) {
       return a.concat(b);
@@ -1242,10 +1235,24 @@
       });
       seg[4] = objectifyAttributeList(noTransforms);
     });
-    var o = Object.assign(Object.assign({}, DEFAULTS), options);
+    return lineSegments;
+  };
 
-    if (o.svg) {
-      var newSVG = win.document.createElementNS(svgNS, "svg");
+  var svgNS = "http://www.w3.org/2000/svg";
+
+  var svgAttributes = ["version", "xmlns", "contentScriptType", "contentStyleType", "baseProfile", "class", "externalResourcesRequired", "x", "y", "width", "height", "viewBox", "preserveAspectRatio", "zoomAndPan", "style"];
+  var headerTagNames = {
+    "defs": true,
+    "metadata": true,
+    "title": true,
+    "desc": true,
+    "style": true
+  };
+
+  var segmentsToSVG = function segmentsToSVG(lineSegments, inputSVG) {
+    var newSVG = win.document.createElementNS(svgNS, "svg");
+
+    if (inputSVG !== undefined) {
       svgAttributes.map(function (a) {
         return {
           attribute: a,
@@ -1256,49 +1263,66 @@
       }).forEach(function (obj) {
         return newSVG.setAttribute(obj.attribute, obj.value);
       });
+    }
 
-      if (newSVG.getAttribute("xmlns") === null) {
-        newSVG.setAttribute("xmlns", svgNS);
-      }
+    if (newSVG.getAttribute("xmlns") === null) {
+      newSVG.setAttribute("xmlns", svgNS);
+    }
 
-      var styles = elements.filter(function (e) {
-        return e.tagName === "style" || e.tagName === "defs";
+    Array.from(inputSVG.childNodes).filter(function (el) {
+      return headerTagNames[el.tagName];
+    }).map(function (el) {
+      return el.cloneNode(true);
+    }).forEach(function (el) {
+      return newSVG.appendChild(el);
+    });
+    lineSegments.forEach(function (s) {
+      var line = win.document.createElementNS(svgNS, "line");
+      attributes.line.forEach(function (attr, i) {
+        return line.setAttributeNS(null, attr, s[i]);
       });
 
-      if (styles.length > 0) {
-        styles.map(function (style) {
-          return style.cloneNode(true);
-        }).forEach(function (style) {
-          return newSVG.appendChild(style);
+      if (s[4] != null) {
+        Object.keys(s[4]).forEach(function (key) {
+          return line.setAttribute(key, s[4][key]);
         });
       }
 
-      lineSegments.forEach(function (s) {
-        var line = win.document.createElementNS(svgNS, "line");
-        line.setAttributeNS(null, "x1", s[0]);
-        line.setAttributeNS(null, "y1", s[1]);
-        line.setAttributeNS(null, "x2", s[2]);
-        line.setAttributeNS(null, "y2", s[3]);
+      newSVG.appendChild(line);
+    });
+    return newSVG;
+  };
 
-        if (s[4] != null) {
-          Object.keys(s[4]).forEach(function (key) {
-            return line.setAttribute(key, s[4][key]);
-          });
-        }
+  var xmlStringToDOM = function xmlStringToDOM(input) {
+    return typeof input === "string" || input instanceof String ? new win.DOMParser().parseFromString(input, "text/xml").documentElement : input;
+  };
 
-        newSVG.appendChild(line);
-      });
+  var defaults = {
+    input: "string",
+    output: "string",
+    resolution: {
+      circle: 64,
+      path: 128
+    }
+  };
 
-      if (o.string === false) {
-        return newSVG;
-      }
+  var Segmentize = function Segmentize(input) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaults;
+    var inputSVG = options.input === "svg" ? input : xmlStringToDOM(input);
+    var lineSegments = segmentize(inputSVG, options);
 
-      var stringified = new win.XMLSerializer().serializeToString(newSVG);
-      var beautified = vkXML(stringified);
-      return beautified;
+    if (options.output === "data") {
+      return lineSegments;
     }
 
-    return lineSegments;
+    var newSVG = segmentsToSVG(lineSegments, inputSVG);
+
+    if (options.output === "svg") {
+      return newSVG;
+    }
+
+    var stringified = new win.XMLSerializer().serializeToString(newSVG);
+    return vkXML(stringified);
   };
 
   return Segmentize;

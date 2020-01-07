@@ -1,7 +1,8 @@
-
-/**
- * this converts "stroke-width" into "strokeWidth"
+/*
+ * svg segmentize (c) Robby Kraft
  */
+
+/** this converts "stroke-width" into "strokeWidth" */
 const camelize = function (str) {
   if (typeof str !== "string") { return ""; }
   return str.replace(/(?:^|[-])(\w)/g, (a, c) => (a.substr(0, 1) === "-"

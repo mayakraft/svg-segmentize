@@ -35,7 +35,7 @@ const allPrimitives = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" vie
     </g>
   </svg>`;
 
-Segmentize(allPrimitives, { svg: true });
+Segmentize(allPrimitives, { output: "svg" });
 Segmentize(allPrimitives, {});
 
 const small = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
@@ -44,9 +44,9 @@ const small = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 
   <line stroke="black" x1="0" y1="0" x2="100" y2="100"/>
 </svg>`;
 
-const b_svg = Segmentize(small, { svg: true, string: false });
-const b_svg_string = Segmentize(small, { svg: true });
-const b_segments = Segmentize(small);
+const b_svg = Segmentize(small, { output: "svg" });
+const b_svg_string = Segmentize(small, { output: "string" });
+const b_segments = Segmentize(small, { output: "data" });
 
 tests.push(typeof b_svg === "object");
 tests.push(typeof b_svg_string === "string");
@@ -57,7 +57,7 @@ console.log("\n-------\n#2 segments\n", b_segments);
 
 const line = (new DOMParser()).parseFromString("<line transform='rotate(-90 10 10)' x1='10' y1='10' x2='50' y2='50'/>", "text/xml").documentElement;
 
-const lineSegments = Segmentize(line);
+const lineSegments = Segmentize(line, { output: "data" });
 
 const testTransform = lineSegments[0][0] === 10
   && lineSegments[0][1] === 10
@@ -67,9 +67,9 @@ tests.push(testTransform);
 
 // ///////////////////////////////////////////////
 // small entries
-const min0 = Segmentize("<line />");
-const min1 = Segmentize("<svg><line /></svg>");
-const min2 = Segmentize("<svg><line x1='50' y1='50' x2='100' y2='100' /></svg>");
+const min0 = Segmentize("<line />", { output: "data" });
+const min1 = Segmentize("<svg><line /></svg>", { output: "data" });
+const min2 = Segmentize("<svg><line x1='50' y1='50' x2='100' y2='100' /></svg>", { output: "data" });
 tests.push(min0.length === 1);
 tests.push(min1.length === 1);
 tests.push(min2.length === 1);

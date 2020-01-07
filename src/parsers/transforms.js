@@ -1,8 +1,10 @@
+/*
+ * svg segmentize (c) Robby Kraft
+ */
+
 import { multiply_matrices2 } from "../math/matrix";
 
-/**
- * SVG transforms are in DEGREES !
- */
+/** SVG transforms are in DEGREES ! */
 
 /**
  * parse the value of a SVG transform attribute

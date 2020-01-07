@@ -1,3 +1,7 @@
+/*
+ * svg segmentize (c) Robby Kraft
+ */
+
 import { multiply_matrices2 } from "../math/matrix";
 import transformStringToMatrix from "../parsers/transforms";
 

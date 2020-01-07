@@ -1,3 +1,7 @@
+/*
+ * svg segmentize (c) Robby Kraft
+ */
+
 // get DOMParser and XMLSerializer from the browser or from Node
 import {
   isBrowser,

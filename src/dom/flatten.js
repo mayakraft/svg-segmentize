@@ -1,3 +1,7 @@
+/*
+ * svg segmentize (c) Robby Kraft
+ */
+
 const flattenTree = function (element) {
   // the container objects in SVG: group, the svg itself
   if (element.tagName === "g" || element.tagName === "svg") {

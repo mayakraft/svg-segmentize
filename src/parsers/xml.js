@@ -1,3 +1,7 @@
+/*
+ * svg segmentize (c) Robby Kraft
+ */
+
 import window from "../environment/window";
 
 const xmlStringToDOM = function (input) {

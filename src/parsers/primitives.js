@@ -1,12 +1,12 @@
 /*
- * convert an SVG into line segments. include all SVG primitives
- * all line segments are encoded as 1 array of 4 numbers:
- *  [ x1, y1, x2, y2 ]
+ * svg segmentize (c) Robby Kraft
  */
 
 import PathProperties from "../../include/svg-path-properties/path-properties";
 
+// default curve resolution. number of straight line segments to be replaced by
 const RES_CIRCLE = 64;
+const RES_ELLIPSE = 64;
 const RES_PATH = 128;
 
 // SVG will occasionally remove x1="0", attribute absense is an implied 0.
@@ -69,16 +69,16 @@ const svg_circle_to_segments = function (circle, RESOLUTION = RES_CIRCLE) {
       arr[(i + 1) % arr.length][1],
     ]);
 };
-const svg_ellipse_to_segments = function (ellipse) {
+const svg_ellipse_to_segments = function (ellipse, RESOLUTION = RES_ELLIPSE) {
   const attrs = getAttributes(ellipse, ["cx", "cy", "rx", "ry"]);
   const cx = parseFloat(attrs[0]);
   const cy = parseFloat(attrs[1]);
   const rx = parseFloat(attrs[2]);
   const ry = parseFloat(attrs[3]);
-  return Array.from(Array(RES_CIRCLE))
+  return Array.from(Array(RESOLUTION))
     .map((_, i) => [
-      cx + rx * Math.cos(i / RES_CIRCLE * Math.PI * 2),
-      cy + ry * Math.sin(i / RES_CIRCLE * Math.PI * 2),
+      cx + rx * Math.cos(i / RESOLUTION * Math.PI * 2),
+      cy + ry * Math.sin(i / RESOLUTION * Math.PI * 2),
     ]).map((_, i, arr) => [
       arr[i][0],
       arr[i][1],

@@ -1,14 +1,10 @@
-// const multiply_vector2_matrix2 = function (vector, matrix) {
-//   return [
-//     vector[0] * matrix[0] + vector[1] * matrix[2] + matrix[4],
-//     vector[0] * matrix[1] + vector[1] * matrix[3] + matrix[5],
-//   ];
-// };
-/**
- * line is an array of 4 numbers: [x1, y1, x2, y2]
- *
+/*
+ * svg segmentize (c) Robby Kraft
  */
 
+/**
+ * line is the SVG line, two endpoints, an array of 4 numbers: [x1, y1, x2, y2]
+ */
 export const multiply_line_matrix2 = function (line, matrix) {
   return [
     line[0] * matrix[0] + line[1] * matrix[2] + matrix[4],
@@ -18,6 +14,9 @@ export const multiply_line_matrix2 = function (line, matrix) {
   ];
 };
 
+/**
+ * svg matrices are 3x2, three 2D vectors: basis vectors for X, Y axes, origin-translation vector
+ */
 export const multiply_matrices2 = function (m1, m2) {
   return [
     m1[0] * m2[0] + m1[2] * m2[1],

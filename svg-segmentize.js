@@ -1293,10 +1293,6 @@
     return newSVG;
   };
 
-  var xmlStringToDOM = function xmlStringToDOM(input) {
-    return typeof input === "string" || input instanceof String ? new win.DOMParser().parseFromString(input, "text/xml").documentElement : input;
-  };
-
   var defaults = {
     input: "string",
     output: "string",
@@ -1304,6 +1300,10 @@
       circle: 64,
       path: 128
     }
+  };
+
+  var xmlStringToDOM = function xmlStringToDOM(input) {
+    return typeof input === "string" || input instanceof String ? new win.DOMParser().parseFromString(input, "text/xml").documentElement : input;
   };
 
   var Segmentize = function Segmentize(input) {

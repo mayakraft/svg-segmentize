@@ -11,7 +11,6 @@ import window from "./environment/window";
 import primitives from "./parsers/primitives";
 import segmentize from "./segmentize";
 import segmentsToSVG from "./toSVG";
-import xmlStringToDOM from "./parsers/xml";
 
 const parseable = Object.keys(primitives);
 
@@ -20,8 +19,15 @@ const defaults = {
   output: "string", // "string", "svg", "data"
   resolution: {
     circle: 64,
+    ellipse: 64,
     path: 128
   }
+};
+
+const xmlStringToDOM = function (input) {
+  return (typeof input === "string" || input instanceof String
+    ? (new window.DOMParser()).parseFromString(input, "text/xml").documentElement
+    : input);
 };
 
 const Segmentize = function (input, options = defaults) {

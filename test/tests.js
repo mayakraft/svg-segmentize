@@ -4,6 +4,38 @@ const Segmentize = require("../svg-segmentize");
 // add booleans into this array
 const tests = [];
 
+
+// test #1
+// test all input and output types. svg, string, data
+const simpleString = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- comment -->
+  <rect fill="none" x="10" y="10" width="80" height="80"/>
+  <line stroke="black" x1="0" y1="0" x2="100" y2="100"/>
+</svg>`;
+// convert the above string to an SVG Element
+const simpleElement = (new DOMParser()).parseFromString(simpleString, "text/xml").documentElement;
+const simpleTest_string_svg = Segmentize(simpleString, { output: "svg" });
+const simpleTest_string_string = Segmentize(simpleString, { output: "string" });
+const simpleTest_string_data = Segmentize(simpleString, { output: "data" });
+const simpleTest_svg_svg = Segmentize(simpleElement, { input: "svg", output: "svg" });
+const simpleTest_svg_string = Segmentize(simpleElement, { input: "svg", output: "string" });
+const simpleTest_svg_data = Segmentize(simpleElement, { input: "svg", output: "data" });
+tests.push(simpleTest_string_string.constructor.name === "String");
+tests.push(simpleTest_string_svg.constructor.name === "Element");
+tests.push(simpleTest_string_data.constructor.name === "Array");
+tests.push(simpleTest_svg_string.constructor.name === "String");
+tests.push(simpleTest_svg_svg.constructor.name === "Element");
+tests.push(simpleTest_svg_data.constructor.name === "Array");
+// Element types, get number of child nodes
+tests.push(simpleTest_string_svg.childNodes.length === 5);
+tests.push(simpleTest_svg_svg.childNodes.length === 5);
+// array data types, get number in the array
+tests.push(simpleTest_string_data.length === 5);
+tests.push(simpleTest_svg_data.length === 5);
+
+
+// test #2
+// all primitive types
 const allPrimitives = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="75 75 350 350" width="45vmax" height="45vmax">
     <style type="text/css">
       .pen { stroke: black; }
@@ -34,60 +66,66 @@ const allPrimitives = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" vie
       <path style="stroke: black; fill: none;" d="M275.5,322.5h-51c-6.6,0-12,5.4-12,12v51c0,6.6,5.4,12,12,12h51c6.6,0,12-5.4,12-12v-51C287.5,327.9,282.1,322.5,275.5,322.5z"/>
     </g>
   </svg>`;
+const testPrimitivesString = Segmentize(allPrimitives);
+const testPrimitivesSVG = Segmentize(allPrimitives, { output: "svg" });
+const testPrimitivesData = Segmentize(allPrimitives, { output: "data" });
+// very rough test. just checking to make sure this string is populated (should be around 51,000)
+tests.push(testPrimitivesString.length > 10000);
+// these differ by 2, because the SVG contains <defs> and <style> elements
+tests.push(testPrimitivesSVG.childNodes.length === 410);
+tests.push(testPrimitivesData.length === 408);
 
-Segmentize(allPrimitives, { svg: true });
-Segmentize(allPrimitives, {});
 
-const small = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- comment -->
-  <rect fill="none" x="10" y="10" width="80" height="80"/>
-  <line stroke="black" x1="0" y1="0" x2="100" y2="100"/>
-</svg>`;
+// test #3
+// simple transform
+const lineTransformString = "<line transform='rotate(-90 10 10)' x1='10' y1='10' x2='50' y2='50'/>";
+const lineTransformSVG = (new DOMParser())
+  .parseFromString(lineTransformString, "text/xml")
+  .documentElement;
+// presently the "input" option is forgiving. if the input type !== string it runs DOM parse
+const lineTransformSegments = Segmentize(lineTransformString, { output: "data" });
+tests.push(lineTransformSegments[0][0] === 10
+  && lineTransformSegments[0][1] === 10
+  && lineTransformSegments[0][2] === 50
+  && lineTransformSegments[0][3] === -30);
 
-const b_svg = Segmentize(small, { svg: true, string: false });
-const b_svg_string = Segmentize(small, { svg: true });
-const b_segments = Segmentize(small);
 
-tests.push(typeof b_svg === "object");
-tests.push(typeof b_svg_string === "string");
-tests.push(typeof b_segments === "object");
+// test #4
+// small and missing data
+const min0 = Segmentize("<line x1='1' y1='2' x2='3' y2='4'/>", { output: "data" });
+const min1 = Segmentize("<svg><line /></svg>", { output: "data" });
+const min2 = Segmentize("<svg><line x1='50' y1='50' x2='100' y2='100' /></svg>", { output: "data" });
+tests.push(min0.length === 1);
+tests.push(min1.length === 1);
+tests.push(min2.length === 1);
+tests.push(min0[0][0] === 1 && min0[0][1] === 2 && min0[0][2] === 3 && min0[0][3] === 4);
+tests.push(min1[0][0] === 0 && min1[0][1] === 0 && min1[0][2] === 0 && min1[0][3] === 0);
 
-console.log("\n-------\n#1 svg\n", b_svg_string);
-console.log("\n-------\n#2 segments\n", b_segments);
 
-const line = (new DOMParser()).parseFromString("<line transform='rotate(-90 10 10)' x1='10' y1='10' x2='50' y2='50'/>", "text/xml").documentElement;
+// test #5
+// circle resolution
+const circle = '<circle cx="100" cy="100" r="50"/>';
+const ellipse = '<ellipse cx="100" cy="100" rx="100" ry="50"/>';
+const circleTest1 = Segmentize(circle, { output: "data", resolution: { circle: 50 } });
+const circleTest2 = Segmentize(circle, { output: "data", resolution: { circle: 6 } });
+const ellipseTest1 = Segmentize(ellipse, { output: "data", resolution: { ellipse: 50 } });
+const ellipseTest2 = Segmentize(ellipse, { output: "data", resolution: { ellipse: 6 } });
+tests.push(circleTest1.length === 50);
+tests.push(circleTest2.length === 6);
+tests.push(ellipseTest1.length === 50);
+tests.push(ellipseTest2.length === 6);
 
-const lineSegments = Segmentize(line);
 
-const testTransform = lineSegments[0][0] === 10
-  && lineSegments[0][1] === 10
-  && lineSegments[0][2] === 50
-  && lineSegments[0][3] === -30;
-tests.push(testTransform);
-
-// const eTransform = Array.from(ellipse.attributes).filter(e => e.nodeName === "transform").shift();
-// console.log(ellipse);
-// console.log(eTransform.baseVal);
-
-// const m = Segmentize.transformIntoMatrix("translate(1,2),scale(0.5,-5),a(1,1,2,3),b(1)");
-// const m2 = Segmentize.transformIntoMatrix("translate(1 2) scale(0.5 -5) a(1 1 2 3) b(1)");
-
-// console.log(m);
-// console.log(m2);
-
-// const m3 = Segmentize.transformIntoMatrix("rotate(180) matrix(1,0,0,-1,0,0) translate(10, 0) skewX(10) skewY(2) scale(2, 2)");
-
-// console.log(m3);
-
+// test #6
+// nested transforms
 const nested_transforms = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <style>line, rect { stroke: black; fill: none;}</style>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" transform="translate(100 100)">
   <rect width="10" height="10"/>
   <g transform="translate(50 50)">
     <rect width="10" height="10"/>
     <g transform="rotate(45)">
       <rect width="10" height="10"/>
-      <g transform="translate(10 10)">
+      <g transform="translate(-150 -150)">
         <rect width="10" height="10"/>
         <g transform="translate(10 10)">
           <rect width="10" height="10"/>
@@ -100,12 +138,17 @@ const nested_transforms = `
   </g>
 </svg>`;
 
-const nested = Segmentize(nested_transforms, { svg: true });
-
-// const str =
-(new XMLSerializer()).serializeToString(nested);
+const nested = Segmentize(nested_transforms, { output: "data" });
 // console.log("nested", nested);
-// console.log("str", str);
+// todo, need to figure out a way to test this. a visual look of it checks out.
+
+// const m = Segmentize.transformStringToMatrix("translate(1,2),scale(0.5,-5),a(1,1,2,3),b(1)");
+// const m2 = Segmentize.transformStringToMatrix("translate(1 2) scale(0.5 -5) a(1 1 2 3) b(1)");
+// console.log(m);
+// console.log(m2);
+// const m3 = Segmentize.transformStringToMatrix("rotate(180) matrix(1,0,0,-1,0,0) translate(10, 0) skewX(10) skewY(2) scale(2, 2)");
+// console.log(m3);
+
 
 if (tests.reduce((a, b) => a && b, true)) {
   console.log("tests passed");

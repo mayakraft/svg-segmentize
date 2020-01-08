@@ -1,12 +1,12 @@
 /*
- * convert an SVG into line segments. include all SVG primitives
- * all line segments are encoded as 1 array of 4 numbers:
- *  [ x1, y1, x2, y2 ]
+ * svg segmentize (c) Robby Kraft
  */
 
-import PathProperties from "../include/svg-path-properties/path-properties";
+import PathProperties from "../../include/svg-path-properties/path-properties";
 
+// default curve resolution. number of straight line segments to be replaced by
 const RES_CIRCLE = 64;
+const RES_ELLIPSE = 64;
 const RES_PATH = 128;
 
 // SVG will occasionally remove x1="0", attribute absense is an implied 0.
@@ -53,15 +53,15 @@ const svg_rect_to_segments = function (rect) {
     [x, y + height, x, y],
   ];
 };
-const svg_circle_to_segments = function (circle) {
+const svg_circle_to_segments = function (circle, RESOLUTION = RES_CIRCLE) {
   const attrs = getAttributes(circle, ["cx", "cy", "r"]);
   const cx = parseFloat(attrs[0]);
   const cy = parseFloat(attrs[1]);
   const r = parseFloat(attrs[2]);
-  return Array.from(Array(RES_CIRCLE))
+  return Array.from(Array(RESOLUTION))
     .map((_, i) => [
-      cx + r * Math.cos(i / RES_CIRCLE * Math.PI * 2),
-      cy + r * Math.sin(i / RES_CIRCLE * Math.PI * 2),
+      cx + r * Math.cos(i / RESOLUTION * Math.PI * 2),
+      cy + r * Math.sin(i / RESOLUTION * Math.PI * 2),
     ]).map((_, i, arr) => [
       arr[i][0],
       arr[i][1],
@@ -69,16 +69,16 @@ const svg_circle_to_segments = function (circle) {
       arr[(i + 1) % arr.length][1],
     ]);
 };
-const svg_ellipse_to_segments = function (ellipse) {
+const svg_ellipse_to_segments = function (ellipse, RESOLUTION = RES_ELLIPSE) {
   const attrs = getAttributes(ellipse, ["cx", "cy", "rx", "ry"]);
   const cx = parseFloat(attrs[0]);
   const cy = parseFloat(attrs[1]);
   const rx = parseFloat(attrs[2]);
   const ry = parseFloat(attrs[3]);
-  return Array.from(Array(RES_CIRCLE))
+  return Array.from(Array(RESOLUTION))
     .map((_, i) => [
-      cx + rx * Math.cos(i / RES_CIRCLE * Math.PI * 2),
-      cy + ry * Math.sin(i / RES_CIRCLE * Math.PI * 2),
+      cx + rx * Math.cos(i / RESOLUTION * Math.PI * 2),
+      cy + ry * Math.sin(i / RESOLUTION * Math.PI * 2),
     ]).map((_, i, arr) => [
       arr[i][0],
       arr[i][1],
@@ -107,15 +107,15 @@ const svg_polyline_to_segments = function (polyline) {
   circularPath.pop();
   return circularPath;
 };
-const svg_path_to_segments = function (path) {
+const svg_path_to_segments = function (path, RESOLUTION = RES_PATH) {
   const d = path.getAttribute("d");
   const prop = PathProperties(d); // path properties
   const length = prop.getTotalLength();
   const isClosed = (d[d.length - 1] === "Z" || d[d.length - 1] === "z");
   const segmentLength = (isClosed
-    ? length / RES_PATH
-    : length / (RES_PATH - 1));
-  const pathsPoints = Array.from(Array(RES_PATH))
+    ? length / RESOLUTION
+    : length / (RESOLUTION - 1));
+  const pathsPoints = Array.from(Array(RESOLUTION))
     .map((_, i) => prop.getPointAtLength(i * segmentLength))
     .map(p => [p.x, p.y]);
   const segments = pathsPoints.map((_, i, a) => [

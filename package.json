@@ -15,12 +15,28 @@
     "divide",
     "convert",
     "fragment",
-    "vector"
+    "vector",
+    "planar",
+    "graph"
   ],
   "author": "Robby Kraft",
   "license": "MIT",
   "repository": "https://github.com/robbykraft/svg-segmentize",
   "dependencies": {
-    "xmldom": "^0.1.27"
+    "xmldom": "^0.1.31"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.7.7",
+    "@babel/polyfill": "^7.7.0",
+    "@babel/preset-env": "^7.7.7",
+    "babel-preset-minify": "^0.5.1",
+    "core-js": "^2.6.11",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.2.0",
+    "eslint-plugin-import": "^2.19.1",
+    "rollup": "^1.28.0",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-babel-minify": "^8.0.0",
+    "rollup-plugin-cleanup": "^3.1.1"
   }
 }

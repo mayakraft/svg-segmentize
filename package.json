@@ -1,6 +1,6 @@
 {
   "name": "svg-segmentize",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "convert an svg to a copy containing only (straight) line segments",
   "main": "svg-segmentize.js",
   "scripts": {
@@ -14,16 +14,13 @@
     "simplify",
     "divide",
     "convert",
-    "fragment",
-    "vector",
-    "planar",
-    "graph"
+    "fragment"
   ],
   "author": "Robby Kraft",
   "license": "MIT",
   "repository": "https://github.com/robbykraft/svg-segmentize",
   "dependencies": {
-    "xmldom": "^0.1.31"
+    "xmldom": "^0.2.1"
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",

@@ -2,45 +2,25 @@
 
 [![Build Status](https://travis-ci.org/robbykraft/svg-segmentize.svg?branch=master)](https://travis-ci.org/robbykraft/svg-segmentize)
 
-this converts an SVG image into a copy containing only (straight) line segments.
-
-*see an [example here](https://robbykraft.github.io/svg-segmentize/test/) segmented image is on the right*
-
-works with every shape in the SVG 1.1 specification:
-
-- line
-- rect
-- circle
-- ellipse
-- polygon
-- polyline
-- path
-
-all attributes from the original geometry are carried over and applied to the corresponding line(s). you'll notice that:
+This converts an SVG image into a copy containing only (straight) line segments. This works with every shape in the SVG 1.1 specification: *line*, *rect*, *circle*, *ellipse*, *polygon*, *polyline*, *path*. All attributes from the original geometry are carried over and applied to the corresponding line(s). you'll notice that:
 
 - fills disappear (there are no closed shapes anymore)
 - dashed lines are no longer visible on curves (curves are now collections of very short lines)
 
+*see an [example here](https://robbykraft.github.io/svg-segmentize/test/) segmented image is on the right*
+
 ## usage
 
-web
-
 ```javascript
-let lineSegments = Segmentize(input, options);
+const segments = Segmentize(input, options);
 ```
 
-node
+- **input** is an SVG, either a *string* or an *SVGElement*.
+- **options** is a *Javascript object*, and is optional.
 
-```javascript
-const Segmentize = require("svg-segmentize");
-
-let lineSegments = Segmentize(input, options);
-```
-
-### arguments (2):
-
-- **input** is an SVG either as a *string* or an *SVGElement*.
-- options is a *Javascript object*, and is optional. 
+  - **options.input**: "string" / "svg"
+  - **options.output**: "string" / "svg" / "data"
+  - **options.resolution**: how many line segments do curve-types become?
 
 ### options
 
@@ -56,11 +36,7 @@ DEFAULTS = {
 };
 ```
 
-- **options.input**: "string" / "svg"
-- **options.output**: "string" / "svg" / "data"
-- **options.resolution**: *how many line segments do curve-types become?*
-
-the "data" output option exports an array of line segments, endpoints in this order: `[x1, y1, x2, y2]`
+**output: "data"**: this exports an array of line segments. endpoints are in this order: `[x1, y1, x2, y2]`
 
 ```javascript
 [
@@ -70,14 +46,14 @@ the "data" output option exports an array of line segments, endpoints in this or
 ]
 ```
 
-the fifth entry for every line segment is an object. this object contains all the attributes from the original element, **except for transforms, those are applied to the geometry**.
+the fifth entry for every line segment is a Javascript object that contains all the attributes from the original element, **except for transforms, those are applied to the geometry**.
 
-an output: "data" might look like:
+an example output for "data" option:
 
 ```javascript
 [
   [197.5, 185, 160, 250, {
-    "class": "thick top",
+    "class": "marker top",
     "stroke-dashArray": "7 2"
   }],
   [187.5, 92.5, 262.5, 92.5, {
@@ -106,13 +82,15 @@ SVG transforms are applied in a nested manner. this library recurses through the
 <line x1="50" y1="30" x2="60" y2="40"/>
 ```
 
-## todo
+### to do
 
 - transforms inside a `<style>` aren't parsed.
 
-## notes
+## credit
 
-the [getPointAtLength](https://developer.mozilla.org/en-US/docs/Web/API/SVGGeometryElement/getPointAtLength) method is implemented in all browsers but doesn't exist in node, hence, the svg-path-properties library. If you don't need to convert `<path>` items, this can be removed, shrinking the library size substantially.
+- [SVG path properties](https://github.com/rveciana/svg-path-properties)
+- [vkBeautify](https://github.com/vkiryukhin/vkBeautify)
+- [XML DOM](https://github.com/xmldom/xmldom)
 
 ## license
 

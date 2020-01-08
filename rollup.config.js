@@ -19,8 +19,8 @@ module.exports = [{
     babel({
       babelrc: false,
       presets: [["@babel/env", { modules: false }]],
-    }),
-  ],
+    })
+  ]
 },
 {
   input: "src/index.js",
@@ -37,7 +37,6 @@ module.exports = [{
       babelrc: false,
       presets: [["@babel/env", { modules: false }]],
     }),
-    minify({ mangle: { names: false } }),
-  ],
-
+    minify({ mangle: { names: false } })
+  ]
 }];

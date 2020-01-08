@@ -2,9 +2,6 @@
  * svg segmentize (c) Robby Kraft
  */
 
-// todo: introduce options {} as a second parameter, make available:
-// RES_CIRCLE, RES_PATH
-
 import vkXML from "../include/vkbeautify-xml";
 
 import window from "./environment/window";

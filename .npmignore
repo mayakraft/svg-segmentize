@@ -4,5 +4,7 @@
 .travis.yml
 .eslintrc.json
 rollup.config.js
+readme.md
 src/
 include/
+test/

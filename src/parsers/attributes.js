@@ -1,3 +1,7 @@
+/*
+ * svg segmentize (c) Robby Kraft
+ */
+
 // attributes relevant to the geometry of each shape type
 export default {
   line: ["x1", "y1", "x2", "y2"],

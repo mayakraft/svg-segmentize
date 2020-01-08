@@ -896,9 +896,6 @@
     return svgProperties(svgString);
   }
 
-  var RES_CIRCLE = 64;
-  var RES_ELLIPSE = 64;
-  var RES_PATH = 128;
   var emptyValue = {
     value: 0
   };
@@ -944,7 +941,7 @@
   };
 
   var svg_circle_to_segments = function svg_circle_to_segments(circle) {
-    var RESOLUTION = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : RES_CIRCLE;
+    var RESOLUTION = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 64;
     var attrs = getAttributes(circle, ["cx", "cy", "r"]);
     var cx = parseFloat(attrs[0]);
     var cy = parseFloat(attrs[1]);
@@ -957,7 +954,7 @@
   };
 
   var svg_ellipse_to_segments = function svg_ellipse_to_segments(ellipse) {
-    var RESOLUTION = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : RES_ELLIPSE;
+    var RESOLUTION = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 64;
     var attrs = getAttributes(ellipse, ["cx", "cy", "rx", "ry"]);
     var cx = parseFloat(attrs[0]);
     var cy = parseFloat(attrs[1]);
@@ -992,7 +989,7 @@
   };
 
   var svg_path_to_segments = function svg_path_to_segments(path) {
-    var RESOLUTION = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : RES_PATH;
+    var RESOLUTION = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 128;
     var d = path.getAttribute("d");
     var prop = PathProperties(d);
     var length = prop.getTotalLength();
@@ -1214,6 +1211,13 @@
   var segmentize = function segmentize(input) {
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var RESOLUTION = _typeof(options.resolution) === "object" ? options.resolution : {};
+
+    if (typeof options.resolution === "number") {
+      ["circle", "ellipse", "path"].forEach(function (k) {
+        RESOLUTION[k] = options.resolution;
+      });
+    }
+
     apply_nested_transforms(input);
     var elements = flattenTree(input);
     var lineSegments = elements.filter(function (el) {
@@ -1298,6 +1302,7 @@
     output: "string",
     resolution: {
       circle: 64,
+      ellipse: 64,
       path: 128
     }
   };

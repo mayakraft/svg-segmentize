@@ -2,9 +2,6 @@
  * svg segmentize (c) Robby Kraft
  */
 
-// todo: introduce options {} as a second parameter, make available:
-// RES_CIRCLE, RES_PATH
-
 import primitives from "./parsers/primitives";
 import geomAttributes from "./parsers/attributes";
 import flatten from "./dom/flatten";
@@ -25,10 +22,14 @@ const objectifyAttributeList = function (list) {
 };
 
 const segmentize = function (input, options = {}) {
-  // set options. resolution for curves
   const RESOLUTION = typeof options.resolution === "object"
     ? options.resolution
     : {};
+  if (typeof options.resolution === "number") {
+    ["circle", "ellipse", "path"].forEach((k) => {
+      RESOLUTION[k] = options.resolution;
+    });
+  }
 
   // flatten all layers, carry (nested) transforms over as .matrix property on every node
   storeNestedTransformOnElements(input);

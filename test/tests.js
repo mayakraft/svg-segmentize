@@ -106,14 +106,21 @@ tests.push(min1[0][0] === 0 && min1[0][1] === 0 && min1[0][2] === 0 && min1[0][3
 // circle resolution
 const circle = '<circle cx="100" cy="100" r="50"/>';
 const ellipse = '<ellipse cx="100" cy="100" rx="100" ry="50"/>';
-const circleTest1 = Segmentize(circle, { output: "data", resolution: { circle: 50 } });
-const circleTest2 = Segmentize(circle, { output: "data", resolution: { circle: 6 } });
-const ellipseTest1 = Segmentize(ellipse, { output: "data", resolution: { ellipse: 50 } });
-const ellipseTest2 = Segmentize(ellipse, { output: "data", resolution: { ellipse: 6 } });
-tests.push(circleTest1.length === 50);
-tests.push(circleTest2.length === 6);
-tests.push(ellipseTest1.length === 50);
-tests.push(ellipseTest2.length === 6);
+const path = '<path d="M10,30A20,20 0,0,1 50,30A20,20 0,0,1 90,30Q90,60 50,90Q10,60 10,30z" />';
+const circleResolutionTest1 = Segmentize(circle, { output: "data", resolution: { circle: 50 } });
+const circleResolutionTest2 = Segmentize(circle, { output: "data", resolution: { circle: 6 } });
+const circleResolutionTest3 = Segmentize(circle, { output: "data", resolution: 20 });
+const ellipseResolutionTest1 = Segmentize(ellipse, { output: "data", resolution: { ellipse: 6 } });
+const ellipseResolutionTest2 = Segmentize(ellipse, { output: "data", resolution: 20 });
+const pathResolutionTest1 = Segmentize(path, { output: "data", resolution: { path: 6 } });
+const pathResolutionTest2 = Segmentize(path, { output: "data", resolution: 20 });
+tests.push(circleResolutionTest1.length === 50);
+tests.push(circleResolutionTest2.length === 6);
+tests.push(circleResolutionTest3.length === 20);
+tests.push(ellipseResolutionTest1.length === 6);
+tests.push(ellipseResolutionTest2.length === 20);
+tests.push(pathResolutionTest1.length === 6);
+tests.push(pathResolutionTest2.length === 20);
 
 
 // test #6

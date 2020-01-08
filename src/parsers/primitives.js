@@ -4,11 +4,6 @@
 
 import PathProperties from "../../include/svg-path-properties/path-properties";
 
-// default curve resolution. number of straight line segments to be replaced by
-const RES_CIRCLE = 64;
-const RES_ELLIPSE = 64;
-const RES_PATH = 128;
-
 // SVG will occasionally remove x1="0", attribute absense is an implied 0.
 const emptyValue = { value: 0 };
 
@@ -53,7 +48,7 @@ const svg_rect_to_segments = function (rect) {
     [x, y + height, x, y],
   ];
 };
-const svg_circle_to_segments = function (circle, RESOLUTION = RES_CIRCLE) {
+const svg_circle_to_segments = function (circle, RESOLUTION = 64) {
   const attrs = getAttributes(circle, ["cx", "cy", "r"]);
   const cx = parseFloat(attrs[0]);
   const cy = parseFloat(attrs[1]);
@@ -69,7 +64,7 @@ const svg_circle_to_segments = function (circle, RESOLUTION = RES_CIRCLE) {
       arr[(i + 1) % arr.length][1],
     ]);
 };
-const svg_ellipse_to_segments = function (ellipse, RESOLUTION = RES_ELLIPSE) {
+const svg_ellipse_to_segments = function (ellipse, RESOLUTION = 64) {
   const attrs = getAttributes(ellipse, ["cx", "cy", "rx", "ry"]);
   const cx = parseFloat(attrs[0]);
   const cy = parseFloat(attrs[1]);
@@ -107,7 +102,7 @@ const svg_polyline_to_segments = function (polyline) {
   circularPath.pop();
   return circularPath;
 };
-const svg_path_to_segments = function (path, RESOLUTION = RES_PATH) {
+const svg_path_to_segments = function (path, RESOLUTION = 128) {
   const d = path.getAttribute("d");
   const prop = PathProperties(d); // path properties
   const length = prop.getTotalLength();

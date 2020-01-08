@@ -1,6 +1,6 @@
 {
   "name": "svg-segmentize",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "convert an svg to a copy containing only (straight) line segments",
   "main": "svg-segmentize.js",
   "scripts": {
